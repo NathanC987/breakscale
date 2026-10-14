@@ -1,5 +1,6 @@
 node_modules
 dist
+dist-live
 *.local
 .DS_Store
 
@@ -11,6 +12,8 @@ public/__harness.js
 NEXT.md
 .vercel
 .env*
+# Live mode's build flag (no secrets): must ship
+!.env.live
 
 # Throwaway inspection scripts used while laying out the presets
 scratch-*.ts

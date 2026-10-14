@@ -19,6 +19,12 @@ import type { NodeConfig, NodeKind, SimNode, SimSnapshot, Topology } from './sim
 import { useCoarsePointer } from './useCoarsePointer';
 import { useGithubStars, useCountUp, formatStars } from './useGithubStars';
 import { Engine } from './sim/engine';
+import { LIVE, LIVE_HIDDEN_FIELDS, LIVE_KINDS, LIVE_SESSION_KEY } from './live/mode';
+import { LiveEngine, type AppEngine } from './live/LiveEngine';
+import { LIVE_PRESET } from './live/preset';
+import { connectionProblem } from './live/validate';
+import { LivePanel } from './live/LivePanel';
+import { LiveStatus } from './live/LiveStatus';
 import { PRESETS, makeNode } from './sim/presets';
 import { CHALLENGES, challengeById } from './sim/challenges';
 import { FIXED_DURING_CHALLENGE, applyLoad, evaluate } from './sim/challenge';
@@ -92,7 +98,9 @@ import './App.css';
  * Persistence
  * ------------------------------------------------------------------ */
 
-const STORAGE_KEY = 'breakscale.session.v1';
+// Live mode keeps its own session, so the simulator's design and the live
+// one never overwrite each other.
+const STORAGE_KEY = LIVE ? LIVE_SESSION_KEY : 'breakscale.session.v1';
 
 /* ------------------------------------------------------------------ *
  * Layout persistence
@@ -506,11 +514,13 @@ interface Session {
  */
 
 function loadSession(): Session {
-  const fallback: Session = {
-    topology: PRESETS[0]!.topology,
-    rps: clientRps(PRESETS[0]!.topology),
-    presetId: PRESETS[0]!.id,
-  };
+  const fallback: Session = LIVE
+    ? { topology: LIVE_PRESET, rps: clientRps(LIVE_PRESET), presetId: null }
+    : {
+        topology: PRESETS[0]!.topology,
+        rps: clientRps(PRESETS[0]!.topology),
+        presetId: PRESETS[0]!.id,
+      };
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -861,7 +871,7 @@ export default function App() {
    * as well as in the shortcuts dialog, so a key can be learned from the
    * menu without opening a second thing to read about the first.
    */
-  const menuItems = useMemo(
+  const allMenuItems = useMemo(
     () => [
       {
         label: 'Your designs',
@@ -906,6 +916,17 @@ export default function App() {
     ],
     [openGlossary, coarse],
   );
+  // Live mode drives one real system: there are no saved designs, challenges
+  // or simulated examples to open in it.
+  const menuItems = useMemo(
+    () =>
+      LIVE
+        ? allMenuItems.filter(
+            (i) => !['Your designs', 'Challenges', 'Examples'].includes(i.label),
+          )
+        : allMenuItems,
+    [allMenuItems],
+  );
 
   /**
    * The engine is a mutable simulation owned outside React's render cycle.
@@ -915,7 +936,9 @@ export default function App() {
    * value is never replaced, so it behaves as a stable instance —
    * StrictMode's double render reuses the same engine.
    */
-  const [engine] = useState(() => new Engine(initial.topology));
+  const [engine] = useState<AppEngine>(() =>
+    LIVE ? new LiveEngine(initial.topology) : new Engine(initial.topology),
+  );
 
   /**
    * Seeded from the engine's initial state rather than set by an effect, so
@@ -933,6 +956,18 @@ export default function App() {
   useEffect(() => {
     runningRef.current = running;
   }, [running]);
+
+  /* Live mode: the stream to the bridge is an external system, so it is
+     opened by an effect and closed by its cleanup (StrictMode's double run
+     opens and closes one, leaving exactly one live). Pause is real there:
+     the clients stop sending. */
+  useEffect(() => {
+    if (engine instanceof LiveEngine) return engine.connect();
+    return undefined;
+  }, [engine]);
+  useEffect(() => {
+    if (engine instanceof LiveEngine) engine.setLoadEnabled(running);
+  }, [engine, running]);
 
   /* ---------------- per-node sparkline history ----------------
    *
@@ -1001,7 +1036,9 @@ export default function App() {
       const dt = now - last;
       last = now;
 
-      if (!runningRef.current) return;
+      // Live mode keeps reading while paused: pausing stops the real load,
+      // and watching it drain away is part of what there is to see.
+      if (!runningRef.current && !LIVE) return;
 
       // Clamp so a long tab-away does not replay minutes of simulated time.
       engine.advance(Math.min(dt, MAX_FRAME_MS));
@@ -1594,6 +1631,14 @@ export default function App() {
       if (fromId === toId) return;
       const id = `${fromId}->${toId}`;
       if (topology.edges.some((e) => e.id === id)) return;
+      if (LIVE) {
+        const why = connectionProblem(topology, fromId, toId);
+        if (why) {
+          toastSeq.current += 1;
+          setToast({ text: why, id: toastSeq.current });
+          return;
+        }
+      }
       history.commit('connection', snapRef.current);
       applyTopology({
         ...topology,
@@ -2349,6 +2394,8 @@ export default function App() {
    * always pauses first — the same contract a debugger's step button has.
    */
   const handleStep = useCallback(() => {
+    // Real time cannot be single-stepped.
+    if (LIVE) return;
     setRunning(false);
     runningRef.current = false;
     engine.advance(STEP_MS);
@@ -2607,7 +2654,15 @@ export default function App() {
   }, [cumulativeLost, simTimeMs]);
 
   return (
-    <div className="app">
+    <div
+      className={
+        // Live mode with no live data: the canvas still holds the last frame,
+        // which must not read as traffic flowing right now.
+        LIVE && engine instanceof LiveEngine && engine.liveView().connection !== 'live'
+          ? 'app is-live-stale'
+          : 'app'
+      }
+    >
       <header className="app-bar" ref={barRef}>
         <div className="app-island app-island-brand">
           {/* The wordmark is the one place the product speaks in its own
@@ -2699,12 +2754,15 @@ export default function App() {
         </div>
 
         <div className="app-island app-island-load">
+          {LIVE && engine instanceof LiveEngine && (
+            <LiveStatus view={engine.liveView()} />
+          )}
           <TrafficControl
             rps={offeredRps}
             onRpsChange={handleRpsChange}
             running={running}
             onToggleRun={handleToggleRun}
-            onStep={handleStep}
+            onStep={LIVE ? undefined : handleStep}
             onReset={handleReset}
             system={snapshot?.system ?? EMPTY_SYSTEM}
             lost={lostRps}
@@ -2781,27 +2839,29 @@ export default function App() {
           {/* Labelled, and in the bar rather than three levels down inside
               Settings. Sending a design to someone is a thing people want
               to do often, and a feature nobody can find has not shipped. */}
-          <button
-            type="button"
-            className="btn app-share-btn"
-            onClick={handleOpenShare}
-            title="Get a link to this design"
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+          {!LIVE && (
+            <button
+              type="button"
+              className="btn app-share-btn"
+              onClick={handleOpenShare}
+              title="Get a link to this design"
             >
-              <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
-            </svg>
-            Share
-          </button>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5" />
+              </svg>
+              Share
+            </button>
+          )}
 
           <div className="app-menu-wrap">
             <button
@@ -2872,6 +2932,7 @@ export default function App() {
           onDismiss={phone ? toggleLibrary : undefined}
         >
           <Palette
+            kinds={LIVE ? LIVE_KINDS : undefined}
             onAdd={handlePaletteAdd}
             onAddAnnotation={handlePaletteAnnotation}
             armedTool={armedTool}
@@ -2910,8 +2971,8 @@ export default function App() {
           */}
           <div
             className="stage-canvas"
-            onDragOver={handleFileDragOver}
-            onDrop={handleFileDrop}
+            onDragOver={LIVE ? undefined : handleFileDragOver}
+            onDrop={LIVE ? undefined : handleFileDrop}
           >
             <Canvas
               topology={topology}
@@ -2945,6 +3006,7 @@ export default function App() {
               onToolChange={setArmedTool}
               fitSignal={fitNonce}
               visibleRef={stageSafeRef}
+              liveView={engine instanceof LiveEngine ? engine.liveView() : null}
             />
             {/*
               The uncovered-canvas sentinel. Inert and invisible; a sibling
@@ -3045,6 +3107,20 @@ export default function App() {
             onChangeMany={handleConfigChangeMany}
             onDeleteMany={handleDeleteMany}
             lockedFields={challenge ? FIXED_DURING_CHALLENGE : undefined}
+            hiddenFields={
+              LIVE && selectedNode ? LIVE_HIDDEN_FIELDS[selectedNode.kind] : undefined
+            }
+            extra={
+              LIVE && selectedNode && engine instanceof LiveEngine ? (
+                <LivePanel
+                  node={selectedNode}
+                  view={engine.liveView()}
+                  engine={engine}
+                  onChange={handleConfigChange}
+                />
+              ) : undefined
+            }
+            extraOnly={LIVE && selectedNode?.kind === 'lb'}
           />
           <PanelResizer
             edge="right"

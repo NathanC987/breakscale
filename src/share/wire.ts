@@ -210,6 +210,9 @@ const FIELDS = [
   'prefixRps',
   'renditions',
   'cpuMsCap',
+  // Live mode only (src/live). Appended, so every existing link decodes as before.
+  'poolSize',
+  'maxConnAgeMs',
 ] as const satisfies readonly ConfigField[];
 
 /** Every field the wire can carry; exported so a test can prove it is complete. */

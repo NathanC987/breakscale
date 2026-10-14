@@ -556,6 +556,24 @@ export interface NodeConfig {
    * means no budget.
    */
   cpuMsCap?: number;
+
+  /* ---- live mode only (src/live) -------------------------------------- *
+   * Read by the live bridge, never by the engine. They describe how a real
+   * client holds TCP connections, which only matters in front of a real L4
+   * load balancer: it balances connections, not requests.
+   * --------------------------------------------------------------------- */
+
+  /**
+   * client, live mode: persistent connections the client spreads its
+   * requests over. 0 opens a new connection for every request. A small pool
+   * pins all of a client's traffic to as few backends as it has connections.
+   */
+  poolSize?: number;
+  /**
+   * client, live mode: ms after which a pooled connection is closed and
+   * reopened, so the load balancer gets to choose again. 0 never recycles.
+   */
+  maxConnAgeMs?: number;
 }
 
 export interface SimNode {

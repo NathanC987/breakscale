@@ -105,7 +105,17 @@ function siteOrigin(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  /*
+   * Live mode (`--mode live`): the app talks to the l4-maglev-lb bridge on
+   * this machine. Proxied rather than called cross-origin, so the bridge
+   * never has to send CORS headers; changeOrigin makes the Host header the
+   * bridge's own, which it checks.
+   */
+  server:
+    mode === 'live'
+      ? { proxy: { '/api': { target: 'http://127.0.0.1:8790', changeOrigin: true } } }
+      : {},
   plugins: [
     react(),
     staticPage('glossary', renderGlossaryPage),
@@ -145,4 +155,4 @@ export default defineConfig({
     // output stays readable.
     chunkSizeWarningLimit: 600,
   },
-});
+}));

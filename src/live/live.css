@@ -1,0 +1,97 @@
+/* Live mode. Colours come from the tokens in src/index.css only. */
+
+.live-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  margin: var(--sp-2) 0;
+}
+
+.live-note {
+  color: var(--text-dim);
+}
+
+.live-events {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+
+.live-event {
+  padding: var(--sp-1) 0;
+  border-bottom: var(--bw) solid var(--border);
+  color: var(--text-dim);
+}
+
+.live-event.is-warn {
+  color: var(--warn);
+}
+
+.live-event.is-error {
+  color: var(--danger);
+}
+
+.live-event-t {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
+.live-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  padding: 0 var(--sp-2);
+}
+
+.live-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--text-faint);
+}
+
+.live-status.is-live .live-status-dot {
+  background: var(--ok);
+}
+
+.live-status.is-reconnecting .live-status-dot,
+.live-status.is-connecting .live-status-dot {
+  background: var(--warn);
+}
+
+.live-status.is-offline .live-status-dot,
+.live-status.is-unauthorized .live-status-dot {
+  background: var(--danger);
+}
+
+.live-status-issues {
+  color: var(--warn);
+  cursor: help;
+}
+
+.live-problems {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-sm);
+  color: var(--warn);
+  list-style: none;
+}
+
+/* No live data (bridge stopped or restarting): freeze and fade the last frame
+   so it cannot be mistaken for traffic flowing now. The status pill says why. */
+.app.is-live-stale .cv-surface {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+  transition:
+    opacity 0.3s,
+    filter 0.3s;
+}
+
+.app.is-live-stale .cv-edge-flow {
+  animation-play-state: paused;
+}

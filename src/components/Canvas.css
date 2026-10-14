@@ -2168,3 +2168,31 @@
     display: none;
   }
 }
+
+/* ---- live mode: direct replies (Direct Server Return) ------------------- *
+   A backend's reply to a client, drawn as its own wire because it never
+   passes back through the load balancer. Not part of the topology: no hit
+   area, never selectable. Its colour is the client's, the thing it arrives
+   at, so it reads as "data coming home" rather than as another request. */
+.cv-return-edges {
+  pointer-events: none;
+}
+
+.cv-edge.is-return .cv-edge-line {
+  stroke: var(--kind-client-stroke);
+  stroke-opacity: 0.35;
+  stroke-dasharray: 2 4;
+}
+
+.cv-edge.is-return .cv-edge-flow {
+  stroke: var(--kind-client-stroke);
+}
+
+.cv-edge.is-return .cv-edge-arrow {
+  fill: var(--kind-client-stroke);
+  fill-opacity: 0.6;
+}
+
+.cv-edge-label.is-return {
+  fill: var(--kind-client-ink);
+}

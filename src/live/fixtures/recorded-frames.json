@@ -1,0 +1,2453 @@
+{
+  "baseline": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 7,
+    "tMs": 3349.7,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0026,
+      "cpuProcess": 0.0044,
+      "rxPps": 767.8082575447229,
+      "txPps": 641.4978317569252,
+      "rxBps": 54252.81430156359,
+      "txBps": 60571.31930179885,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 25.858827326635744
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 131.0,
+        "hitsPs": 511.2091248419528,
+        "missesPs": 156.14753424160816,
+        "evictionsPs": 0.0
+      },
+      "tableGeneration": 20.0,
+      "regenLastUs": 969.0,
+      "backendsEligible": 3.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 150.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 150.68585329718186,
+          "attempts": 150.68585329718186,
+          "ok": 106.77739273376464,
+          "failed": 33.92926498082241,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "timeout": 33.92926498082241
+        },
+        "totals": {
+          "requests": 185,
+          "ok": 107,
+          "failed": 34,
+          "failedByReason": {
+            "timeout": 34
+          }
+        },
+        "latencyMs": {
+          "p50": 19.468,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 107
+        },
+        "inFlight": 44,
+        "lagMs": 1.0150456400879193,
+        "behind": false,
+        "openConns": 8,
+        "respPsByBackend": {
+          "service-2": 41.91262144689827,
+          "service-3": 41.91262144689827,
+          "service-1": 22.9521498399681
+        },
+        "lastTrace": {
+          "totalMs": 18.10657271926175,
+          "ok": true,
+          "reason": null,
+          "slot": 1,
+          "queuedMs": 0.003,
+          "serviceMs": 17.061,
+          "backend": "service-1"
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 29.0,
+          "flowsAssignedPs": 28.84253817201679,
+          "pps": 142.2235502964966,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118148
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 24.957890921697707,
+          "ok": 22.961259647961892,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9966312737358167,
+          "accepts": 24.957890921697707
+        },
+        "totals": {
+          "arrivals": 25,
+          "ok": 23,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 2,
+        "queued": 0,
+        "utilization": 0.09754306635284153,
+        "openConns": 2,
+        "latencyMs": {
+          "p50": 30.893,
+          "p95": 57.18,
+          "p99": 57.18,
+          "n": 23
+        },
+        "serviceMs": {
+          "p50": 30.893,
+          "p95": 57.18,
+          "p99": 57.18,
+          "n": 23
+        },
+        "respPsToClient": {
+          "client-1": 22.961259647961892
+        }
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 52.0,
+          "flowsAssignedPs": 51.71765465327149,
+          "pps": 252.62085157559534,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 44.905947636110916,
+          "ok": 41.91221779370352,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9958198949382628,
+          "accepts": 44.905947636110916
+        },
+        "totals": {
+          "arrivals": 45,
+          "ok": 42,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 3,
+        "queued": 0,
+        "utilization": 0.12364037301621592,
+        "openConns": 3,
+        "latencyMs": {
+          "p50": 18.025,
+          "p95": 49.023,
+          "p99": 66.695,
+          "n": 42
+        },
+        "serviceMs": {
+          "p50": 18.025,
+          "p95": 49.023,
+          "p99": 66.695,
+          "n": 42
+        },
+        "respPsToClient": {
+          "client-1": 41.91221779370352
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 50.0,
+          "flowsAssignedPs": 49.728514089684126,
+          "pps": 246.65342988483326,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 44.95022104647905,
+          "ok": 41.953539643380445,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9977876020657355,
+          "accepts": 44.95022104647905
+        },
+        "totals": {
+          "arrivals": 45,
+          "ok": 42,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 3,
+        "queued": 0,
+        "utilization": 0.11698067229431545,
+        "openConns": 3,
+        "latencyMs": {
+          "p50": 19.468,
+          "p95": 42.029,
+          "p99": 49.023,
+          "n": 42
+        },
+        "serviceMs": {
+          "p50": 19.468,
+          "p95": 42.029,
+          "p99": 49.023,
+          "n": 42
+        },
+        "respPsToClient": {
+          "client-1": 41.953539643380445
+        }
+      }
+    },
+    "retiring": [],
+    "events": [],
+    "system": {
+      "latencyMs": {
+        "p50": 19.468,
+        "p95": 52.944,
+        "p99": 66.695,
+        "n": 107
+      }
+    }
+  },
+  "starting": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 2,
+    "tMs": 2093.1,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0008,
+      "cpuProcess": 0.0314,
+      "rxPps": 136.73283687647802,
+      "txPps": 0.0,
+      "rxBps": 9577.914686363614,
+      "txBps": 0.0,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 14.33489418866302
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 13.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 0.0,
+        "hitsPs": 0.0,
+        "missesPs": 14.33489418866302,
+        "evictionsPs": 0.0
+      },
+      "tableGeneration": 17.0,
+      "regenLastUs": 108.0,
+      "backendsEligible": 0.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "paused",
+        "config": {
+          "rps": 150.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 0.0,
+          "attempts": 0.0,
+          "ok": 0.0,
+          "failed": 0.0,
+          "retries": 0.0
+        },
+        "failedPsByReason": {},
+        "totals": {
+          "requests": 0,
+          "ok": 0,
+          "failed": 0,
+          "failedByReason": {}
+        },
+        "latencyMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "inFlight": 0,
+        "lagMs": 0.0,
+        "behind": false,
+        "openConns": 0,
+        "respPsByBackend": {},
+        "lastTrace": null
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "starting",
+        "lb": {
+          "up": false,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 0.0,
+          "flowsAssignedPs": 0.0,
+          "pps": 0.0,
+          "hcFailuresPs": 1.1026841683586939
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118148
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 0.0,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 0,
+          "ok": 0,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "serviceMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "respPsToClient": {}
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "starting",
+        "lb": {
+          "up": false,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 0.0,
+          "flowsAssignedPs": 0.0,
+          "pps": 0.0,
+          "hcFailuresPs": 1.1026841683586939
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 0.0,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 0,
+          "ok": 0,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "serviceMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "respPsToClient": {}
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "starting",
+        "lb": {
+          "up": false,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 0.0,
+          "flowsAssignedPs": 0.0,
+          "pps": 0.0,
+          "hcFailuresPs": 1.1026841683586939
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 0.0,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 0,
+          "ok": 0,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "serviceMs": {
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "n": 0
+        },
+        "respPsToClient": {}
+      }
+    },
+    "retiring": [],
+    "events": [
+      {
+        "tMs": 1958.0,
+        "level": "info",
+        "msg": "slot 1: responder started for service-1"
+      },
+      {
+        "tMs": 1958.0,
+        "level": "info",
+        "msg": "slot 2: responder started for service-2"
+      },
+      {
+        "tMs": 1958.0,
+        "level": "info",
+        "msg": "slot 3: responder started for service-3"
+      }
+    ],
+    "system": {
+      "latencyMs": {
+        "p50": 0.0,
+        "p95": 0.0,
+        "p99": 0.0,
+        "n": 0
+      }
+    }
+  },
+  "crashed-lb-still-up": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 26,
+    "tMs": 8126.1,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0027,
+      "cpuProcess": 0.0032,
+      "rxPps": 769.7982494753923,
+      "txPps": 673.3248254455305,
+      "rxBps": 54072.856883046676,
+      "txBps": 63618.75300509424,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 0.0
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 831.0,
+        "hitsPs": 534.084832000369,
+        "missesPs": 139.2399934451614,
+        "evictionsPs": 0.0
+      },
+      "tableGeneration": 20.0,
+      "regenLastUs": 969.0,
+      "backendsEligible": 3.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 150.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 133.77367140214463,
+          "attempts": 133.77367140214463,
+          "ok": 128.78211649907954,
+          "failed": 3.9932439224520784,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "crashed": 3.9932439224520784,
+          "timeout": 0.0
+        },
+        "totals": {
+          "requests": 885,
+          "ok": 809,
+          "failed": 73,
+          "failedByReason": {
+            "timeout": 69,
+            "crashed": 4
+          }
+        },
+        "latencyMs": {
+          "p50": 24.523,
+          "p95": 57.18,
+          "p99": 66.695,
+          "n": 744
+        },
+        "inFlight": 3,
+        "lagMs": 1.876204420113936,
+        "behind": false,
+        "openConns": 4,
+        "respPsByBackend": {
+          "service-2": 41.929061185746825,
+          "service-3": 43.925683146972865,
+          "service-1": 42.927372166359845
+        },
+        "lastTrace": {
+          "totalMs": 34.873964676080504,
+          "ok": true,
+          "reason": null,
+          "slot": 2,
+          "queuedMs": 0.009,
+          "serviceMs": 33.561,
+          "backend": "service-2"
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "crashed",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 290.0,
+          "flowsAssignedPs": 50.72314046930879,
+          "pps": 212.8382756947467,
+          "hcFailuresPs": 0.9945713817511528
+        },
+        "proc": {
+          "alive": false,
+          "pid": null
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": {
+          "kind": "crash",
+          "sinceMs": 7963.9
+        },
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 0.0,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 0,
+          "ok": 0,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "n": 0
+        },
+        "serviceMs": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "n": 0
+        },
+        "respPsToClient": {}
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 265.0,
+          "flowsAssignedPs": 43.76114079705072,
+          "pps": 233.7242747115209,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 44.92955068913885,
+          "ok": 40.935812850104284,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9968689195172822,
+          "accepts": 44.92955068913885
+        },
+        "totals": {
+          "arrivals": 264,
+          "ok": 260,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 4,
+        "queued": 0,
+        "utilization": 0.1485260530169963,
+        "openConns": 4,
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 57.18,
+          "p99": 66.695,
+          "n": 237
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 57.18,
+          "p99": 66.695,
+          "n": 237
+        },
+        "respPsToClient": {
+          "client-1": 40.935812850104284
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 276.0,
+          "flowsAssignedPs": 44.75571217880187,
+          "pps": 226.76227503926282,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 42.82734716043589,
+          "ok": 43.82333197812044,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9919696353691112,
+          "accepts": 42.82734716043589
+        },
+        "totals": {
+          "arrivals": 270,
+          "ok": 270,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.14041081967773605,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 24.523,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 242
+        },
+        "serviceMs": {
+          "p50": 24.523,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 242
+        },
+        "respPsToClient": {
+          "client-1": 43.82333197812044
+        }
+      }
+    },
+    "retiring": [],
+    "events": [
+      {
+        "tMs": 7963.9,
+        "level": "warn",
+        "msg": "service-1: crashed (SIGKILL)"
+      }
+    ],
+    "system": {
+      "latencyMs": {
+        "p50": 24.523,
+        "p95": 57.18,
+        "p99": 66.695,
+        "n": 744
+      }
+    }
+  },
+  "crashed-lb-down": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 28,
+    "tMs": 8629.0,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0027,
+      "cpuProcess": 0.0036,
+      "rxPps": 721.5953315840846,
+      "txPps": 627.1717000407127,
+      "rxBps": 50612.06044021098,
+      "txBps": 59329.84646407325,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 0.0
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 913.0,
+        "hitsPs": 480.0696214257753,
+        "missesPs": 147.10207861493737,
+        "evictionsPs": 0.0
+      },
+      "tableGeneration": 21.0,
+      "regenLastUs": 566.0,
+      "backendsEligible": 2.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 150.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 140.80726245535274,
+          "attempts": 140.80726245535274,
+          "ok": 113.84416964475328,
+          "failed": 29.958992011777177,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "crashed": 29.958992011777177,
+          "timeout": 0.0
+        },
+        "totals": {
+          "requests": 966,
+          "ok": 865,
+          "failed": 99,
+          "failedByReason": {
+            "timeout": 69,
+            "crashed": 30
+          }
+        },
+        "latencyMs": {
+          "p50": 24.523,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 713
+        },
+        "inFlight": 2,
+        "lagMs": 1.177644920971943,
+        "behind": false,
+        "openConns": 2,
+        "respPsByBackend": {
+          "service-2": 50.930286420021204,
+          "service-3": 42.941221883547286,
+          "service-1": 19.972661341184786
+        },
+        "lastTrace": {
+          "totalMs": 0.2283842877659481,
+          "ok": false,
+          "reason": "crashed",
+          "slot": null,
+          "queuedMs": 0,
+          "serviceMs": 0,
+          "backend": null
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "crashed",
+        "lb": {
+          "up": false,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 309.0,
+          "flowsAssignedPs": 44.726983362649875,
+          "pps": 106.35082710674526,
+          "hcFailuresPs": 1.9878659272288832
+        },
+        "proc": {
+          "alive": false,
+          "pid": null
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": {
+          "kind": "crash",
+          "sinceMs": 7963.9
+        },
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 0.0,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 0,
+          "ok": 0,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "n": 0
+        },
+        "serviceMs": {
+          "p50": 0,
+          "p95": 0,
+          "p99": 0,
+          "n": 0
+        },
+        "respPsToClient": {}
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 297.0,
+          "flowsAssignedPs": 51.68451410795097,
+          "pps": 267.3679672122848,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 50.91872892241377,
+          "ok": 50.91872892241377,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.996812898918187,
+          "accepts": 50.91872892241377
+        },
+        "totals": {
+          "arrivals": 294,
+          "ok": 292,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 2,
+        "queued": 0,
+        "utilization": 0.17718489225740142,
+        "openConns": 2,
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 57.18,
+          "p99": 66.695,
+          "n": 235
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 57.18,
+          "p99": 66.695,
+          "n": 235
+        },
+        "respPsToClient": {
+          "client-1": 50.91872892241377
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 307.0,
+          "flowsAssignedPs": 50.69058114433653,
+          "pps": 253.4529057216826,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 42.83877541201962,
+          "ok": 42.83877541201962,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9925011819544012,
+          "accepts": 42.83877541201962
+        },
+        "totals": {
+          "arrivals": 295,
+          "ok": 295,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.1445003382131626,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 24.523,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 236
+        },
+        "serviceMs": {
+          "p50": 24.523,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 236
+        },
+        "respPsToClient": {
+          "client-1": 42.83877541201962
+        }
+      }
+    },
+    "retiring": [],
+    "events": [],
+    "system": {
+      "latencyMs": {
+        "p50": 24.523,
+        "p95": 52.944,
+        "p99": 72.03,
+        "n": 713
+      }
+    }
+  },
+  "partitioned": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 58,
+    "tMs": 16176.3,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0017,
+      "cpuProcess": 0.0022,
+      "rxPps": 610.8364256222121,
+      "txPps": 511.3516657488877,
+      "rxBps": 43286.8138684822,
+      "txBps": 48542.59373258993,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 0.0
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 8.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 2001.0,
+        "hitsPs": 386.00086830849887,
+        "missesPs": 125.3507974403888,
+        "evictionsPs": 0.0
+      },
+      "tableGeneration": 22.0,
+      "regenLastUs": 989.0,
+      "backendsEligible": 3.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 150.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 139.6894779737696,
+          "attempts": 139.6894779737696,
+          "ok": 95.78707061058486,
+          "failed": 0.9977819855269258,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "crashed": 0.0,
+          "timeout": 0.9977819855269258
+        },
+        "totals": {
+          "requests": 2112,
+          "ok": 1954,
+          "failed": 110,
+          "failedByReason": {
+            "timeout": 78,
+            "crashed": 32
+          }
+        },
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 719
+        },
+        "inFlight": 48,
+        "lagMs": 1.9916318560717627,
+        "behind": false,
+        "openConns": 1,
+        "respPsByBackend": {
+          "service-2": 0.0,
+          "service-3": 53.88022721845399,
+          "service-1": 41.90684339213088
+        },
+        "lastTrace": {
+          "totalMs": 30.27343661597115,
+          "ok": true,
+          "reason": null,
+          "slot": 1,
+          "queuedMs": 0.004,
+          "serviceMs": 29.429,
+          "backend": "service-1"
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 477.0,
+          "flowsAssignedPs": 36.80936115313005,
+          "pps": 193.99528175298266,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118176
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 41.79312145764201,
+          "ok": 38.80789849638187,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9901486408400957,
+          "accepts": 41.79312145764201
+        },
+        "totals": {
+          "arrivals": 167,
+          "ok": 163,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 4,
+        "queued": 0,
+        "utilization": 0.11274073499550091,
+        "openConns": 4,
+        "latencyMs": {
+          "p50": 19.468,
+          "p95": 49.023,
+          "p99": 77.793,
+          "n": 163
+        },
+        "serviceMs": {
+          "p50": 19.468,
+          "p95": 49.023,
+          "p99": 77.793,
+          "n": 163
+        },
+        "respPsToClient": {
+          "client-1": 38.80789849638187
+        }
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 768.0,
+          "flowsAssignedPs": 40.788751548063026,
+          "pps": 65.65994151639414,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": {
+          "kind": "partition",
+          "sinceMs": 14975.6
+        },
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9964576990836809,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 734,
+          "ok": 734,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 265
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 265
+        },
+        "respPsToClient": {
+          "client-1": 0.0
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 756.0,
+          "flowsAssignedPs": 47.752684739195736,
+          "pps": 251.69644247951086,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 50.80173854441813,
+          "ok": 53.79007610585449,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9922250409575737,
+          "accepts": 50.80173854441813
+        },
+        "totals": {
+          "arrivals": 776,
+          "ok": 776,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.16653210356927664,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 288
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 72.03,
+          "n": 288
+        },
+        "respPsToClient": {
+          "client-1": 53.79007610585449
+        }
+      }
+    },
+    "retiring": [],
+    "events": [],
+    "system": {
+      "latencyMs": {
+        "p50": 22.707,
+        "p95": 52.944,
+        "p99": 72.03,
+        "n": 719
+      }
+    }
+  },
+  "draining": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 66,
+    "tMs": 18189.8,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0016,
+      "cpuProcess": 0.0026,
+      "rxPps": 636.2666329958417,
+      "txPps": 538.8383048183534,
+      "rxBps": 44768.31679755586,
+      "txBps": 51100.16396247854,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 0.0
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 8.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 2248.0,
+        "hitsPs": 422.5208109738012,
+        "missesPs": 116.31749384455232,
+        "evictionsPs": 0.0
+      },
+      "tableGeneration": 23.0,
+      "regenLastUs": 730.0,
+      "backendsEligible": 2.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 150.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 132.4787634971875,
+          "attempts": 131.48268256863722,
+          "ok": 87.65512171242482,
+          "failed": 54.784451070265504,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "crashed": 0.0,
+          "timeout": 54.784451070265504
+        },
+        "totals": {
+          "requests": 2385,
+          "ok": 2126,
+          "failed": 212,
+          "failedByReason": {
+            "timeout": 180,
+            "crashed": 32
+          }
+        },
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 601
+        },
+        "inFlight": 46,
+        "lagMs": 1.2727833600365557,
+        "behind": false,
+        "openConns": 4,
+        "respPsByBackend": {
+          "service-2": 0.0,
+          "service-3": 47.81188457041353,
+          "service-1": 39.843237142011276
+        },
+        "lastTrace": {
+          "totalMs": 32.885084685403854,
+          "ok": true,
+          "reason": null,
+          "slot": 1,
+          "queuedMs": 0.003,
+          "serviceMs": 32.646,
+          "backend": "service-1"
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 558.0,
+          "flowsAssignedPs": 39.76666456224011,
+          "pps": 220.70498832043262,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118176
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 39.83383947229104,
+          "ok": 38.837993485483764,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 2.987537960421828,
+          "accepts": 39.83383947229104
+        },
+        "totals": {
+          "arrivals": 248,
+          "ok": 247,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 1,
+        "queued": 0,
+        "utilization": 0.1176427186030524,
+        "openConns": 1,
+        "latencyMs": {
+          "p50": 19.468,
+          "p95": 49.023,
+          "p99": 77.793,
+          "n": 224
+        },
+        "serviceMs": {
+          "p50": 19.468,
+          "p95": 49.023,
+          "p99": 77.793,
+          "n": 224
+        },
+        "respPsToClient": {
+          "client-1": 38.837993485483764
+        }
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 862.0,
+          "flowsAssignedPs": 41.754997790352114,
+          "pps": 98.42249479154427,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 3.989168147910859,
+          "ok": 0.9972920369777147,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 2.9918761109331444,
+          "accepts": 3.989168147910859
+        },
+        "totals": {
+          "arrivals": 738,
+          "ok": 735,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 3,
+        "queued": 0,
+        "utilization": 0.007804716353395981,
+        "openConns": 3,
+        "latencyMs": {
+          "p50": 24.523,
+          "p95": 49.023,
+          "p99": 61.754,
+          "n": 127
+        },
+        "serviceMs": {
+          "p50": 24.523,
+          "p95": 49.023,
+          "p99": 61.754,
+          "n": 127
+        },
+        "respPsToClient": {
+          "client-1": 0.9972920369777147
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "draining",
+        "lb": {
+          "up": true,
+          "adminEnabled": false,
+          "draining": true,
+          "activeFlows": 828.0,
+          "flowsAssignedPs": 34.795831491960094,
+          "pps": 219.7108217063766,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 45.87891924653264,
+          "ok": 47.8736548659471,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 2.992103429121694,
+          "accepts": 45.87891924653264
+        },
+        "totals": {
+          "arrivals": 866,
+          "ok": 866,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.16510434227129722,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 252
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 252
+        },
+        "respPsToClient": {
+          "client-1": 47.8736548659471
+        }
+      }
+    },
+    "retiring": [],
+    "events": [],
+    "system": {
+      "latencyMs": {
+        "p50": 22.707,
+        "p95": 52.944,
+        "p99": 66.695,
+        "n": 601
+      }
+    }
+  },
+  "high-load": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 82,
+    "tMs": 22215.1,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.0121,
+      "cpuProcess": 0.0135,
+      "rxPps": 5058.345025311116,
+      "txPps": 4961.011859695469,
+      "rxBps": 357709.3155931772,
+      "txBps": 470179.77485319215,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 0.0
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 8.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 3664.0,
+        "hitsPs": 4067.135848939529,
+        "missesPs": 893.8760107559405,
+        "evictionsPs": 15.891129080105607
+      },
+      "tableGeneration": 24.0,
+      "regenLastUs": 1206.0,
+      "backendsEligible": 3.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 1000.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 0,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 1015.6234411478654,
+          "attempts": 1016.6211066106825,
+          "ok": 923.8382185686869,
+          "failed": 0.0,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "crashed": 0.0,
+          "timeout": 0.0
+        },
+        "totals": {
+          "requests": 3900,
+          "ok": 3531,
+          "failed": 254,
+          "failedByReason": {
+            "timeout": 222,
+            "crashed": 32
+          }
+        },
+        "latencyMs": {
+          "p50": 42.029,
+          "p95": 114.303,
+          "p99": 123.447,
+          "n": 1493
+        },
+        "inFlight": 115,
+        "lagMs": 1.117752672143979,
+        "behind": false,
+        "openConns": 115,
+        "respPsByBackend": {
+          "service-2": 310.27395893613567,
+          "service-3": 297.30430791951267,
+          "service-1": 316.2599517130386
+        },
+        "lastTrace": {
+          "totalMs": 93.74523530277656,
+          "ok": true,
+          "reason": null,
+          "slot": 1,
+          "queuedMs": 82.813,
+          "serviceMs": 10.528,
+          "backend": "service-1"
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 1097.0,
+          "flowsAssignedPs": 300.93825695449993,
+          "pps": 1666.5821622760757,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118176
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 344.4203563840771,
+          "ok": 316.4673999239201,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.99663974715407,
+          "accepts": 344.4203563840771
+        },
+        "totals": {
+          "arrivals": 820,
+          "ok": 785,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 8,
+        "queued": 27,
+        "utilization": 0.9856118619510418,
+        "openConns": 35,
+        "latencyMs": {
+          "p50": 36.033,
+          "p95": 97.996,
+          "p99": 114.303,
+          "n": 577
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 577
+        },
+        "respPsToClient": {
+          "client-1": 316.4673999239201
+        }
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 1393.0,
+          "flowsAssignedPs": 302.92464808951314,
+          "pps": 1709.2895716788594,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 335.0008896626144,
+          "ok": 310.07522822938415,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9940529146584192,
+          "accepts": 335.0008896626144
+        },
+        "totals": {
+          "arrivals": 1314,
+          "ok": 1282,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 8,
+        "queued": 24,
+        "utilization": 0.9643414718870799,
+        "openConns": 32,
+        "latencyMs": {
+          "p50": 30.893,
+          "p95": 72.03,
+          "p99": 90.737,
+          "n": 548
+        },
+        "serviceMs": {
+          "p50": 21.025,
+          "p95": 57.18,
+          "p99": 72.03,
+          "n": 548
+        },
+        "respPsToClient": {
+          "client-1": 310.07522822938415
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 1174.0,
+          "flowsAssignedPs": 290.0131057119273,
+          "pps": 1585.1401257405344,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 333.2926523375322,
+          "ok": 297.3688934029479,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.995764385254684,
+          "accepts": 333.2926523375322
+        },
+        "totals": {
+          "arrivals": 1232,
+          "ok": 1187,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 8,
+        "queued": 37,
+        "utilization": 0.9999729437961216,
+        "openConns": 46,
+        "latencyMs": {
+          "p50": 84.016,
+          "p95": 123.447,
+          "p99": 133.323,
+          "n": 369
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 61.754,
+          "p99": 84.016,
+          "n": 369
+        },
+        "respPsToClient": {
+          "client-1": 297.3688934029479
+        }
+      }
+    },
+    "retiring": [],
+    "events": [],
+    "system": {
+      "latencyMs": {
+        "p50": 42.029,
+        "p95": 114.303,
+        "p99": 123.447,
+        "n": 1493
+      }
+    }
+  },
+  "pooled": {
+    "schema": "l4mlb-live/1",
+    "sessionId": "dbf27050c1124a9b",
+    "seq": 113,
+    "tMs": 30016.9,
+    "rateWindowMs": 1000,
+    "latencyWindowMs": 5000,
+    "status": {
+      "phase": "ready",
+      "loadEnabled": true,
+      "autoPaused": false,
+      "errors": []
+    },
+    "lb": {
+      "id": "lb-1",
+      "state": "running",
+      "pid": 118137,
+      "cpuDatapath": 0.003,
+      "cpuProcess": 0.0034,
+      "rxPps": 377.4696199457268,
+      "txPps": 283.10221495929505,
+      "rxBps": 28405.58224202106,
+      "txBps": 28622.130602937294,
+      "dropsPps": {
+        "parse_error": 0.0,
+        "backend_unhealthy": 0.0,
+        "conntrack_full": 0.0,
+        "no_backend": 0.0
+      },
+      "dropsTotal": {
+        "parse_error": 0.0,
+        "no_backend": 69.0,
+        "backend_unhealthy": 8.0,
+        "conntrack_full": 0.0
+      },
+      "conntrack": {
+        "activeFlows": 5677.0,
+        "hitsPs": 283.10221495929505,
+        "missesPs": 0.0,
+        "evictionsPs": 44.70034973041501
+      },
+      "tableGeneration": 24.0,
+      "regenLastUs": 1206.0,
+      "backendsEligible": 3.0,
+      "config": {
+        "slots": 16,
+        "hcIntervalMs": 500,
+        "hcTimeoutMs": 300,
+        "hcRise": 2,
+        "hcFall": 2,
+        "ctTcpTimeoutMs": 15000,
+        "ctUdpTimeoutMs": 15000,
+        "tableSize": 65537,
+        "measuredCeilingPps": 520000
+      }
+    },
+    "clients": {
+      "client-1": {
+        "ip": "10.98.0.200",
+        "state": "running",
+        "config": {
+          "rps": 200.0,
+          "timeoutMs": 1000.0,
+          "retries": 0,
+          "poolSize": 4,
+          "maxConnAgeMs": 0
+        },
+        "rates": {
+          "scheduled": 236.6895714487485,
+          "attempts": 236.6895714487485,
+          "ok": 237.68826162363774,
+          "failed": 0.0,
+          "retries": 0.0
+        },
+        "failedPsByReason": {
+          "shed": 0.0,
+          "crashed": 0.0,
+          "timeout": 0.0
+        },
+        "totals": {
+          "requests": 7842,
+          "ok": 7467,
+          "failed": 372,
+          "failedByReason": {
+            "timeout": 222,
+            "crashed": 32,
+            "shed": 118
+          }
+        },
+        "latencyMs": {
+          "p50": 30.893,
+          "p95": 211.567,
+          "p99": 228.492,
+          "n": 1345
+        },
+        "inFlight": 3,
+        "lagMs": 1.3679641197086312,
+        "behind": false,
+        "openConns": 4,
+        "respPsByBackend": {
+          "service-2": 117.84544063692964,
+          "service-3": 119.8428209867081,
+          "service-1": 0.0
+        },
+        "lastTrace": {
+          "totalMs": 15.194035389868077,
+          "ok": true,
+          "reason": null,
+          "slot": 3,
+          "queuedMs": 0.005,
+          "serviceMs": 14.332,
+          "backend": "service-3"
+        }
+      }
+    },
+    "backends": {
+      "service-1": {
+        "slot": 1,
+        "lbId": 0,
+        "addr": "10.98.0.11:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 1778.0,
+          "flowsAssignedPs": 0.0,
+          "pps": 0.0,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118176
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 0.0,
+          "ok": 0.0,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.996119416105925,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 1783,
+          "ok": 1783,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 0,
+        "queued": 0,
+        "utilization": 0.0,
+        "openConns": 0,
+        "latencyMs": {
+          "p50": 181.384,
+          "p95": 211.567,
+          "p99": 211.567,
+          "n": 120
+        },
+        "serviceMs": {
+          "p50": 24.523,
+          "p95": 49.023,
+          "p99": 61.754,
+          "n": 120
+        },
+        "respPsToClient": {
+          "client-1": 0.0
+        }
+      },
+      "service-2": {
+        "slot": 2,
+        "lbId": 1,
+        "addr": "10.98.0.12:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 2097.0,
+          "flowsAssignedPs": 0.0,
+          "pps": 141.05443692708738,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118149
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 118.81665769911058,
+          "ok": 117.81819839071468,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.9969186167917743,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 2886,
+          "ok": 2765,
+          "errors": 0,
+          "shed": 118
+        },
+        "inFlight": 3,
+        "queued": 0,
+        "utilization": 0.3707356176147015,
+        "openConns": 2,
+        "latencyMs": {
+          "p50": 26.485,
+          "p95": 211.567,
+          "p99": 246.771,
+          "n": 635
+        },
+        "serviceMs": {
+          "p50": 21.025,
+          "p95": 52.944,
+          "p99": 66.695,
+          "n": 635
+        },
+        "respPsToClient": {
+          "client-1": 117.81819839071468
+        }
+      },
+      "service-3": {
+        "slot": 3,
+        "lbId": 2,
+        "addr": "10.98.0.13:9000",
+        "phase": "serving",
+        "lb": {
+          "up": true,
+          "adminEnabled": true,
+          "draining": false,
+          "activeFlows": 1802.0,
+          "flowsAssignedPs": 0.0,
+          "pps": 142.0477780322077,
+          "hcFailuresPs": 0.0
+        },
+        "proc": {
+          "alive": true,
+          "pid": 118150
+        },
+        "config": {
+          "capacity": 8,
+          "serviceMs": 25,
+          "serviceCv": 0.6,
+          "queueLimit": 64,
+          "errorRate": 0
+        },
+        "fault": null,
+        "rates": {
+          "arrivals": 119.65705307427973,
+          "ok": 118.6599109653274,
+          "errors": 0.0,
+          "shed": 0.0,
+          "probes": 1.994284217904662,
+          "accepts": 0.0
+        },
+        "totals": {
+          "arrivals": 2643,
+          "ok": 2641,
+          "errors": 0,
+          "shed": 0
+        },
+        "inFlight": 2,
+        "queued": 0,
+        "utilization": 0.40328206403966127,
+        "openConns": 2,
+        "latencyMs": {
+          "p50": 28.604,
+          "p95": 84.016,
+          "p99": 143.989,
+          "n": 591
+        },
+        "serviceMs": {
+          "p50": 22.707,
+          "p95": 57.18,
+          "p99": 77.793,
+          "n": 591
+        },
+        "respPsToClient": {
+          "client-1": 118.6599109653274
+        }
+      }
+    },
+    "retiring": [],
+    "events": [],
+    "system": {
+      "latencyMs": {
+        "p50": 30.893,
+        "p95": 211.567,
+        "p99": 228.492,
+        "n": 1345
+      }
+    }
+  }
+}

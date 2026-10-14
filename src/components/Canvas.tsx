@@ -94,6 +94,7 @@ import type { Annotation, AnnotationFont, Note, Section } from '../sim/annotatio
 import { usePreference } from '../content/preferences';
 import { Minimap } from './Minimap';
 import { serialiseSvg } from '../imageExport';
+import type { LiveLbFacts, LiveView, ReturnEdge } from '../live/mapping';
 import './Canvas.css';
 
 /* ------------------------------------------------------------------ *
@@ -508,6 +509,13 @@ export interface CanvasProps {
    * Omitted, the whole surface is treated as visible.
    */
   visibleRef?: RefObject<HTMLElement | null>;
+  /**
+   * Live mode only (src/live): what the real system reports that a
+   * SimSnapshot has no field for. Drives the load balancer's readout, the
+   * state badges on nodes, and the direct-reply wires from backend to client.
+   * Absent in the simulator, where nothing here changes.
+   */
+  liveView?: LiveView | null;
 }
 
 /* ------------------------------------------------------------------ *
@@ -613,6 +621,29 @@ function worstHealth(a: Health, b: Health): Health {
  * consumer (worker, transcoder). Their own queue is structurally always 0;
  * the work they are behind on lives in the queues that feed them.
  */
+/**
+ * The real load balancer, in live mode.
+ *
+ * It is not on the response path (backends reply to clients directly), so a
+ * p99 or a queue of its own would be the structurally-zero cells the ground
+ * rules above forbid. What an engineer watches instead is how hard its
+ * datapath is working: the share of one CPU core it uses, and how many flows
+ * it is tracking.
+ */
+function liveLbReadout(s: NodeStats, lb: LiveLbFacts): Readout {
+  const cpu = clamp(lb.cpu, 0, 1);
+  return {
+    primary: { value: formatRate(s.throughput), label: 'served' },
+    a: { value: formatPct(cpu), label: 'cpu' },
+    b: { value: formatCount(lb.activeFlows), label: 'flows' },
+    load: cpu,
+    health: healthOfLoad(cpu),
+    spark: s.throughput,
+    sparkUnit: false,
+    losing: s.errorRate > 0,
+  };
+}
+
 export function readoutFor(
   kind: NodeKind,
   s: NodeStats,
@@ -1837,6 +1868,78 @@ const EdgeView = memo(function EdgeView({
   );
 });
 
+/** Gap between the lowest node and the return bus, and between bus lanes. */
+const RETURN_BUS_GAP = 36;
+const RETURN_LANE = 6;
+
+/**
+ * Live mode: the path a backend's reply takes to the client.
+ *
+ * With Direct Server Return the reply never passes back through the load
+ * balancer, so drawing it as the request wire in reverse would show a path the
+ * bytes do not take. Every reply instead leaves its backend low on the left
+ * side, drops down a short corridor, runs along a shared bus BENEATH the whole
+ * diagram, and rises into the client: visibly around the load balancer, never
+ * through it. Routing it this way also keeps a backend level with the
+ * load balancer from drawing its reply hidden behind the balancer's box.
+ *
+ * `lane` staggers each backend's wire by a few px so parallel replies stay
+ * distinguishable on the shared stretch.
+ */
+function returnPath(
+  backend: { x: number; y: number },
+  client: { x: number; y: number },
+  busY: number,
+  lane: number,
+): { d: string; tip: { x: number; y: number } } {
+  const off = lane * RETURN_LANE;
+  const sx = backend.x;
+  const sy = backend.y + NODE_H * 0.72;
+  const cx = backend.x - 22 - off;
+  const by = busY + off;
+  const tx = client.x + NODE_W / 2 + off;
+  const ty = client.y + NODE_H;
+  return { d: `M${sx},${sy} H${cx} V${by} H${tx} V${ty}`, tip: { x: tx, y: ty } };
+}
+
+/**
+ * One reply wire. Not part of the topology: no hit area, so it can never be
+ * selected, deleted, or saved, and it exists only while replies are flowing.
+ */
+const ReturnEdgeView = memo(function ReturnEdgeView({
+  d,
+  tipX,
+  tipY,
+  flow,
+}: {
+  d: string;
+  tipX: number;
+  tipY: number;
+  flow: number;
+}) {
+  const route = { d, tip: { x: tipX, y: tipY }, dir: 'up' as const };
+  const width = edgeWidth(flow);
+  const cycle = clamp(20 - Math.log10(1 + flow) * 4, 7, 20);
+  const style = {
+    '--dash-on': '3.0',
+    '--dash-off': (cycle - 3).toFixed(1),
+    '--dash-cycle': (-cycle).toFixed(1),
+    animationDuration: `${clamp(3.2 / Math.log10(10 + flow), 0.35, 2.4).toFixed(2)}s`,
+  } as CSSProperties;
+  return (
+    <g className="cv-edge is-return is-active" aria-hidden="true">
+      <path d={route.d} className="cv-edge-line" strokeWidth={width} />
+      <path
+        d={route.d}
+        className="cv-edge-flow"
+        strokeWidth={width * 0.75}
+        style={style}
+      />
+      <path d={arrowPath(route.tip, route.dir)} className="cv-edge-arrow" />
+    </g>
+  );
+});
+
 /* ------------------------------------------------------------------ *
  * Annotations: sections and notes
  *
@@ -2618,6 +2721,10 @@ interface NodeViewProps {
    * session: content that is simply present does not get an entrance.
    */
   entering: boolean;
+  /** Live mode: a readout computed from the real system, replacing the kind's own. */
+  liveReadout?: Readout | null;
+  /** Live mode: a state word for the header ("starting", "draining"), or null. */
+  liveBadge?: string | null;
 }
 
 const NodeView = memo(function NodeView({
@@ -2634,8 +2741,11 @@ const NodeView = memo(function NodeView({
   onActivate,
   onNudge,
   entering,
+  liveReadout = null,
+  liveBadge = null,
 }: NodeViewProps) {
-  const readout = stats ? readoutFor(node.kind, stats, node.config, backlog) : null;
+  const readout =
+    liveReadout ?? (stats ? readoutFor(node.kind, stats, node.config, backlog) : null);
   // A faulted node is never reported as healthy, whatever its metrics say.
   const health: Health = fault ? 'danger' : readout ? readout.health : 'ok';
 
@@ -2732,7 +2842,8 @@ const NodeView = memo(function NodeView({
   const showHeader = detail >= 1;
 
   /** The badge string as actually rendered; the name budget reserves it. */
-  const badgeText = badge ? `${badge}${pending > 0 ? `+${pending}` : ''}` : '';
+  const badgeText =
+    liveBadge ?? (badge ? `${badge}${pending > 0 ? `+${pending}` : ''}` : '');
   const shownName = truncateLabel(
     node.label,
     showHeader,
@@ -3357,6 +3468,7 @@ export default function Canvas({
   onToolChange,
   fitSignal = 0,
   visibleRef,
+  liveView = null,
 }: CanvasProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const surfaceRef = useRef<HTMLDivElement | null>(null);
@@ -5721,6 +5833,50 @@ export default function Canvas({
     [snapshot, topology],
   );
 
+  /** Live mode: reply wires on a bus beneath the whole diagram (see returnPath). */
+  const returnWires = useMemo(() => {
+    if (!liveView || liveView.returnEdges.length === 0) return null;
+    let bottom = -Infinity;
+    for (const n of topology.nodes) bottom = Math.max(bottom, n.y + NODE_H);
+    const busY = bottom + RETURN_BUS_GAP;
+    const lanes = [...new Set(liveView.returnEdges.map((r) => r.from))].sort();
+    const wires: {
+      id: string;
+      d: string;
+      tip: { x: number; y: number };
+      flow: number;
+    }[] = [];
+    let total = 0;
+    let left = Infinity;
+    let right = -Infinity;
+    for (const r of liveView.returnEdges as readonly ReturnEdge[]) {
+      const a = nodeById.get(r.from);
+      const b = nodeById.get(r.to);
+      if (!a || !b) continue;
+      const { d, tip } = returnPath(a, b, busY, lanes.indexOf(r.from));
+      wires.push({ id: r.id, d, tip, flow: r.flow });
+      total += r.flow;
+      left = Math.min(left, tip.x);
+      right = Math.max(right, a.x - 22);
+    }
+    // Edge labels are centred by the stylesheet: centre this one on the bus's
+    // horizontal run, just below its lowest lane, clear of every wire.
+    const labelX = (left + right) / 2;
+    const labelY = busY + lanes.length * RETURN_LANE + 16;
+    return wires.length > 0 ? { wires, total, labelX, labelY } : null;
+  }, [liveView, topology.nodes, nodeById]);
+
+  /** Live mode: the real load balancer's readout, keyed by node id. */
+  const liveReadoutById = useMemo(() => {
+    const m = new Map<string, Readout>();
+    if (!snapshot || !liveView?.lb) return m;
+    for (const n of topology.nodes) {
+      const s = snapshot.nodes[n.id];
+      if (n.kind === 'lb' && s) m.set(n.id, liveLbReadout(s, liveView.lb));
+    }
+    return m;
+  }, [snapshot, topology.nodes, liveView]);
+
   const healthById = useMemo(() => {
     const m = new Map<string, Health>();
     if (!snapshot) return m;
@@ -5733,12 +5889,15 @@ export default function Canvas({
       if (s) {
         m.set(
           n.id,
-          readoutFor(n.kind, s, n.config, backlogById?.get(n.id) ?? 0).health,
+          (
+            liveReadoutById.get(n.id) ??
+            readoutFor(n.kind, s, n.config, backlogById?.get(n.id) ?? 0)
+          ).health,
         );
       }
     }
     return m;
-  }, [snapshot, topology.nodes, faultById, backlogById]);
+  }, [snapshot, topology.nodes, faultById, backlogById, liveReadoutById]);
 
   /**
    * Lane assignment for bidirectional pairs, keyed by edge id.
@@ -5975,6 +6134,30 @@ export default function Canvas({
               })}
             </g>
 
+            {returnWires && (
+              <g className="cv-return-edges">
+                {returnWires.wires.map((w) => (
+                  <ReturnEdgeView
+                    key={w.id}
+                    d={w.d}
+                    tipX={w.tip.x}
+                    tipY={w.tip.y}
+                    flow={w.flow}
+                  />
+                ))}
+                {showEdgeLabels && (
+                  <text
+                    className="cv-edge-label is-return"
+                    x={returnWires.labelX}
+                    y={returnWires.labelY}
+                  >
+                    replies straight to the client, around the load balancer:{' '}
+                    {formatRate(returnWires.total)}
+                  </text>
+                )}
+              </g>
+            )}
+
             {previewD && (
               <path
                 className={`cv-link-preview${snapTarget ? ' is-snapped' : ''}`}
@@ -5999,6 +6182,8 @@ export default function Canvas({
                   onActivate={onActivate}
                   onNudge={onNudge}
                   entering={enteredIdRef.current === n.id}
+                  liveReadout={liveReadoutById.get(n.id) ?? null}
+                  liveBadge={liveView?.nodes[n.id]?.badge ?? null}
                 />
               ))}
             </g>

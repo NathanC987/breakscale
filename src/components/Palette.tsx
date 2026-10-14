@@ -184,6 +184,11 @@ export interface PaletteProps {
    * evidence and the student who looks back at the rail sees nothing.
    */
   armedTool?: AnnotationTool | null;
+  /**
+   * Only offer these kinds. Live mode passes the three the real system has
+   * (client, load balancer, backend); absent, every kind is offered.
+   */
+  kinds?: readonly NodeKind[];
 }
 
 /* ------------------------------------------------------------------ *
@@ -323,7 +328,7 @@ function handleAnnDragStart(event: DragEvent<HTMLButtonElement>, tool: Annotatio
   startCarry(event);
 }
 
-export function Palette({ onAdd, onAddAnnotation, armedTool }: PaletteProps) {
+export function Palette({ onAdd, onAddAnnotation, armedTool, kinds }: PaletteProps) {
   /**
    * Whether the hover explanations are on. With them OFF (the default) the
    * per-row "?" mark is not rendered at all: <Term> degrades to its bare
@@ -335,9 +340,20 @@ export function Palette({ onAdd, onAddAnnotation, armedTool }: PaletteProps) {
   const hintsOn = usePreference('tooltips');
   const vendor = useVendor();
 
+  const offered = useMemo(
+    () =>
+      kinds
+        ? KIND_GROUPS.map((g) => ({
+            ...g,
+            kinds: g.kinds.filter((k) => kinds.includes(k)),
+          })).filter((g) => g.kinds.length > 0)
+        : KIND_GROUPS,
+    [kinds],
+  );
+
   const totalKinds = useMemo(
-    () => KIND_GROUPS.reduce((n, g) => n + g.kinds.length, 0),
-    [],
+    () => offered.reduce((n, g) => n + g.kinds.length, 0),
+    [offered],
   );
 
   const [query, setQuery] = useState('');
@@ -352,12 +368,14 @@ export function Palette({ onAdd, onAddAnnotation, armedTool }: PaletteProps) {
    * learned where to find it next time without the search box.
    */
   const groups = useMemo(() => {
-    if (!needle) return KIND_GROUPS;
-    return KIND_GROUPS.map((g) => ({
-      ...g,
-      kinds: g.kinds.filter((k) => matchesKind(k, g, needle, vendor)),
-    })).filter((g) => g.kinds.length > 0);
-  }, [needle, vendor]);
+    if (!needle) return offered;
+    return offered
+      .map((g) => ({
+        ...g,
+        kinds: g.kinds.filter((k) => matchesKind(k, g, needle, vendor)),
+      }))
+      .filter((g) => g.kinds.length > 0);
+  }, [needle, vendor, offered]);
 
   const matchCount = useMemo(
     () => groups.reduce((n, g) => n + g.kinds.length, 0),

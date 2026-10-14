@@ -223,6 +223,28 @@ for (let i = 0; i < 600; i += 1) engine.advance(1000 / 60);
 console.log(engine.snapshot().system);
 ```
 
+## Live mode (this fork)
+
+This fork adds a Live mode in which the canvas drives a real system instead of the
+simulator: [l4-maglev-lb](https://github.com/NathanC987/l4-maglev-lb), a Maglev L4
+load balancer, with real client and backend processes behind it. Only three kinds
+are available (client, one load balancer, services as backends), and every number
+on screen is measured. The fork's live code is in `src/live/`; it is enabled only
+in a build with `VITE_LIVE=1` (`.env.live`), so the normal build is unchanged.
+
+```bash
+npm ci
+npm run build:live                     # -> dist-live/
+# then, from the l4-maglev-lb checkout:
+sudo python3 bridge/live_bridge.py --static-dir ../breakscale/dist-live
+# and open the http://127.0.0.1:8790/#token=... link it prints
+```
+
+For hot reload, use `npm run dev:live` (proxies `/api` to the bridge), start the
+bridge with `--dev-origin http://localhost:5173`, and open
+`http://localhost:5173/#token=...`. How measurements map onto the canvas, and what
+is real versus configured, is in that repo's `docs/live-mode.md`.
+
 ## Contributing
 
 - Found a bug, or a number that looks wrong? [Open an issue](https://github.com/xevrion/breakscale/issues).

@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:live": "vite --mode live",
     "dev:links": "bun run --cwd worker dev & VITE_SHARE_API=http://localhost:8787 vite; kill 0",
     "build:webview": "vite build --config vite.webview.config.ts",
     "build:extension": "bun run build:webview && bun run --cwd extension build",
     "build": "tsc -b && vite build",
+    "build:live": "tsc -b && vite build --mode live --outDir dist-live",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

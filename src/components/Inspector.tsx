@@ -487,7 +487,7 @@ interface SliderSpec {
   display: (v: number) => string;
 }
 
-interface NumberSpec {
+export interface NumberSpec {
   control: 'number';
   label: string;
   unit: string;
@@ -1315,7 +1315,7 @@ function SliderRow({
   );
 }
 
-function NumberRow({
+export function NumberRow({
   spec,
   value,
   mixed,
@@ -1445,7 +1445,7 @@ function ChoiceRow({
  * stays neutral, so a healthy panel carries no colour at all and --warn /
  * --danger keep their meaning for when they do appear.
  */
-function StatRow({
+export function StatRow({
   label,
   term,
   value,
@@ -1489,7 +1489,7 @@ function formatMultiple(v: number): string {
   return `${formatCount(v)}x`;
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="ins-section">
       <h2 className="label ins-section-title">{title}</h2>
@@ -2227,6 +2227,23 @@ export interface InspectorProps {
    */
   lockedFields?: readonly string[];
 
+  /* ---- live mode (src/live): optional, additive ------------------- */
+
+  /**
+   * Knobs the selected kind has in the simulator but not in the real system
+   * live mode drives (a real load balancer has no service time to set).
+   * Hidden rather than shown and ignored.
+   */
+  hiddenFields?: readonly string[];
+  /** Rendered under the description: live state and live-only controls. */
+  extra?: ReactNode;
+  /**
+   * `extra` is this node's whole story: drop the sections the simulator's
+   * model derives (ceiling, "Right now"). For a real load balancer they would
+   * be invented capacity math and latency rows that are zero by construction.
+   */
+  extraOnly?: boolean;
+
   /* ---- multi-selection: all optional, all additive ---------------- *
    * The canvas rewrite made a multi-selection reachable, but the shell
    * still resolves a selection of one down to `node`. These props let it
@@ -2257,6 +2274,9 @@ export function Inspector({
   onDelete,
   onRename,
   lockedFields,
+  hiddenFields,
+  extra,
+  extraOnly,
   selectedNodes,
   selectedEdgeCount = 0,
   onChangeMany,
@@ -2322,6 +2342,9 @@ export function Inspector({
       onDelete={onDelete}
       onRename={onRename}
       lockedFields={lockedFields}
+      hiddenFields={hiddenFields}
+      extra={extra}
+      extraOnly={extraOnly}
     />
   );
 }
@@ -2612,6 +2635,9 @@ function SingleInspector({
   onDelete,
   onRename,
   lockedFields,
+  hiddenFields,
+  extra,
+  extraOnly = false,
 }: {
   node: SimNode;
   stats: NodeStats | null;
@@ -2619,8 +2645,13 @@ function SingleInspector({
   onDelete: (id: string) => void;
   onRename: (id: string, label: string) => void;
   lockedFields?: readonly string[];
+  hiddenFields?: readonly string[];
+  extra?: ReactNode;
+  extraOnly?: boolean;
 }) {
-  const fields = FIELDS_BY_KIND[node.kind];
+  const fields = hiddenFields
+    ? FIELDS_BY_KIND[node.kind].filter((f) => !hiddenFields.includes(f))
+    : FIELDS_BY_KIND[node.kind];
   const cfg = node.config;
 
   /** The node's name when the title field took focus; Escape restores it. */
@@ -2628,7 +2659,8 @@ function SingleInspector({
 
   // Derived ceiling: how many requests per second this node can finish if
   // every slot stays busy. Recomputed live as capacity/serviceMs move.
-  const showCeiling = HAS_THROUGHPUT_CEILING.has(node.kind) && cfg.serviceMs > 0;
+  const showCeiling =
+    !extraOnly && HAS_THROUGHPUT_CEILING.has(node.kind) && cfg.serviceMs > 0;
   /**
    * The ceiling is `instances x capacity` slots, not `capacity` alone.
    *
@@ -2726,6 +2758,8 @@ function SingleInspector({
           {KIND_BLURB[node.kind]}
         </p>
 
+        {extra}
+
         {/* The headline meter, chosen per kind: utilisation where slots are
             real, tokens for a bucket, pool fill for a bulkhead, lag against
             retention for a broker, held connections for a websocket gateway,
@@ -2743,7 +2777,7 @@ function SingleInspector({
         {stats && node.kind === 'queue' && <QueuePanel stats={stats} />}
         {stats && node.kind === 'cron' && <CronPanel stats={stats} />}
         {stats && node.kind === 'region' && <RegionPanel stats={stats} />}
-        {stats && node.kind !== 'queue' && node.kind !== 'autoscaler' && (
+        {stats && !extraOnly && node.kind !== 'queue' && node.kind !== 'autoscaler' && (
           <UnitsPanel node={node} stats={stats} />
         )}
 
@@ -2824,7 +2858,7 @@ function SingleInspector({
             row here is a hardwired zero for them, and ten rows of zeros are
             what made them read as broken. Their "What it is doing" panels
             above are their whole live story. */}
-        {node.kind !== 'cron' && node.kind !== 'autoscaler' && (
+        {!extraOnly && node.kind !== 'cron' && node.kind !== 'autoscaler' && (
           <Section title="Right now">
             {stats ? (
               <div className="ins-stats">
@@ -3158,7 +3192,8 @@ export interface TrafficControlProps {
   onRpsChange: (rps: number) => void;
   running: boolean;
   onToggleRun: () => void;
-  onStep: () => void;
+  /** Absent when there is no clock to step (live mode runs in real time). */
+  onStep?: () => void;
   onReset: () => void;
   system: SystemStats;
   /** Requests actually lost per second, from the engine's per-reason counters. */
@@ -3403,15 +3438,17 @@ export function TrafficControl({
         </button>
         {/* Stepping is only meaningful against a stopped clock, and it
             pauses on its own, so the tooltip states what it will do. */}
-        <button
-          type="button"
-          className="btn btn-icon"
-          onClick={onStep}
-          aria-label="Step one tick"
-          title="Step one tick (S)"
-        >
-          <StepForward size={16} aria-hidden="true" />
-        </button>
+        {onStep && (
+          <button
+            type="button"
+            className="btn btn-icon"
+            onClick={onStep}
+            aria-label="Step one tick"
+            title="Step one tick (S)"
+          >
+            <StepForward size={16} aria-hidden="true" />
+          </button>
+        )}
         {/* No shortcut: reset throws away the run's numbers, and an action
             with a cost is exactly the one that should require the pointer. */}
         <button
