@@ -62,7 +62,11 @@ export function connectionProblem(
 }
 
 /** Everything about this topology the live system cannot run, for the UI. */
-export function liveProblems(t: Topology): LiveProblem[] {
+export function liveProblems(
+  t: Topology,
+  maxBackends: number = LIVE_LIMITS.maxBackends,
+  maxClients: number = LIVE_LIMITS.maxClients,
+): LiveProblem[] {
   const problems: LiveProblem[] = [];
   const lbs = t.nodes.filter((n) => n.kind === 'lb');
   if (lbs.length === 0) {
@@ -88,16 +92,16 @@ export function liveProblems(t: Topology): LiveProblem[] {
   }
   const clients = t.nodes.filter((n) => n.kind === 'client');
   const backends = t.nodes.filter((n) => n.kind === 'service');
-  for (const c of clients.slice(LIVE_LIMITS.maxClients)) {
+  for (const c of clients.slice(maxClients)) {
     problems.push({
       nodeId: c.id,
-      message: `At most ${LIVE_LIMITS.maxClients} clients; this one is ignored.`,
+      message: `At most ${maxClients} clients; this one is ignored.`,
     });
   }
-  for (const b of backends.slice(LIVE_LIMITS.maxBackends)) {
+  for (const b of backends.slice(maxBackends)) {
     problems.push({
       nodeId: b.id,
-      message: `At most ${LIVE_LIMITS.maxBackends} backends; this one is ignored.`,
+      message: `At most ${maxBackends} backends; this one is ignored.`,
     });
   }
   for (const e of t.edges) {
@@ -105,7 +109,7 @@ export function liveProblems(t: Topology): LiveProblem[] {
     if (why) problems.push({ edgeId: e.id, message: why });
   }
   const total = clients
-    .slice(0, LIVE_LIMITS.maxClients)
+    .slice(0, maxClients)
     .reduce((s, c) => s + clampTo(c.config.rps, LIVE_LIMITS.rps, 0), 0);
   if (total > LIVE_LIMITS.maxTotalRps) {
     problems.push({
@@ -154,15 +158,16 @@ function backendDoc(n: SimNode): DesiredDoc['nodes']['backends'][number] {
  * disconnected and every backend detached, which is exactly what happens to
  * real traffic with no balancer in the path.
  */
-export function desiredFromTopology(t: Topology, loadEnabled: boolean): DesiredDoc {
+export function desiredFromTopology(
+  t: Topology,
+  loadEnabled: boolean,
+  maxBackends: number = LIVE_LIMITS.maxBackends,
+  maxClients: number = LIVE_LIMITS.maxClients,
+): DesiredDoc {
   const lb = t.nodes.find((n) => n.kind === 'lb');
   const lbId = lb?.id ?? 'no-lb';
-  const clients = t.nodes
-    .filter((n) => n.kind === 'client')
-    .slice(0, LIVE_LIMITS.maxClients);
-  const backends = t.nodes
-    .filter((n) => n.kind === 'service')
-    .slice(0, LIVE_LIMITS.maxBackends);
+  const clients = t.nodes.filter((n) => n.kind === 'client').slice(0, maxClients);
+  const backends = t.nodes.filter((n) => n.kind === 'service').slice(0, maxBackends);
   const total = clients.reduce(
     (s, c) => s + clampTo(c.config.rps, LIVE_LIMITS.rps, 0),
     0,

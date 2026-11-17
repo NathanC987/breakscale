@@ -61,13 +61,15 @@ export function LivePanel({
   const running =
     nv !== undefined &&
     ['starting', 'serving', 'unhealthy', 'draining', 'crashed'].includes(nv.phase);
+  const onAws = view.cloud !== null;
 
   return (
     <>
       {node.kind === 'lb' && (
         <p className="ins-blurb live-note">
-          This is the real maglev-lb. Backends answer clients directly, so it never sees
-          a reply and has no response time of its own; what it spends is CPU per packet.
+          This is the real maglev-lb{onAws ? ', on its own EC2 instance' : ''}. Backends
+          answer clients directly, so it never sees a reply and has no response time of
+          its own; what it spends is CPU per packet.
         </p>
       )}
 
@@ -92,10 +94,14 @@ export function LivePanel({
       {node.kind === 'service' && nv && !running && (
         <p className="ins-hint">
           {nv.phase === 'detached'
-            ? 'Not started: draw a wire from the load balancer to this backend to give it a real process.'
+            ? onAws
+              ? 'Not started: draw a wire from the load balancer to this backend to start an EC2 instance for it.'
+              : 'Not started: draw a wire from the load balancer to this backend to give it a real process.'
             : nv.phase === 'pending'
               ? 'Waiting for a free backend slot.'
-              : 'Shutting down.'}
+              : nv.phase === 'booting'
+                ? 'Its EC2 instance is starting. This takes under a minute.'
+                : 'Shutting down.'}
         </p>
       )}
 

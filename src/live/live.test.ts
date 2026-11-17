@@ -302,3 +302,135 @@ describe('LiveEngine', () => {
     expect(calls.every((c) => c.url.endsWith('/api/v1/actions'))).toBe(true);
   });
 });
+
+describe('the canvas on AWS', () => {
+  const host = (role: string, state: 'ready' | 'starting' = 'ready') => ({
+    role,
+    id: `i-${role}`,
+    type: 't3.micro',
+    state,
+  });
+  const cloud = {
+    provider: 'aws' as const,
+    region: 'us-east-1',
+    stack: 'l4mlb',
+    maxBackends: 5,
+    maxClients: 2,
+    hosts: [host('lb')],
+    running: 1,
+    usdPerHour: 0.1,
+    spentUsd: 0.01,
+    budgetUsd: 3,
+    sessionLeftS: 600,
+    stopping: null,
+  };
+
+  it('has no cloud view in local mode', () => {
+    expect(toSimSnapshot(frame(), T, [], null).view.cloud).toBeNull();
+  });
+
+  it('carries the cloud status through', () => {
+    const { view } = toSimSnapshot(frame({ cloud }), T, [], null);
+    expect(view.cloud?.maxBackends).toBe(5);
+  });
+
+  it('blocks the wire to a backend whose instance is booting', () => {
+    const lb = T.nodes.find((n) => n.kind === 'lb')!;
+    const svc = T.nodes.find((n) => n.kind === 'service')!;
+    const edge = T.edges.find((e) => e.from === lb.id && e.to === svc.id)!;
+    const f = frame({
+      cloud,
+      backends: {
+        [svc.id]: backend({ phase: 'booting', slot: 1, host: host('be1', 'starting') }),
+      },
+    });
+    const { snapshot, view } = toSimSnapshot(f, T, [], null);
+    expect(snapshot.edgeState[edge.id]).toBe('blocked');
+    expect(view.nodes[svc.id]?.badge).toBe('booting');
+    expect(view.nodes[svc.id]?.facts).toContainEqual(['EC2 instance', 'i-be1']);
+    expect(view.nodes[svc.id]?.facts).toContainEqual([
+      'Instance',
+      't3.micro, starting',
+    ]);
+  });
+
+  it('does not claim a ceiling that was never measured on these hosts', () => {
+    const local = frame();
+    const aws = frame({
+      cloud,
+      lb: { ...local.lb, config: { ...local.lb.config, measuredCeilingPps: 0 } },
+    });
+    const lb = T.nodes.find((n) => n.kind === 'lb')!;
+    const labels = (f: typeof local) =>
+      toSimSnapshot(f, T, [], null).view.nodes[lb.id]!.facts.map(([k]) => k);
+    expect(labels(local)).toContain('Measured ceiling');
+    expect(labels(aws)).not.toContain('Measured ceiling');
+  });
+
+  it('holds backends past the AWS pool out of the design, and says why', () => {
+    const lb = T.nodes.find((n) => n.kind === 'lb')!;
+    const template = T.nodes.find((n) => n.kind === 'service')!;
+    const extra = Array.from({ length: 6 }, (_, i) => ({
+      ...template,
+      id: `extra${i}`,
+    }));
+    const t: Topology = {
+      nodes: [...T.nodes.filter((n) => n.kind !== 'service'), ...extra],
+      edges: extra.map((n) => ({
+        ...T.edges[0]!,
+        id: `e${n.id}`,
+        from: lb.id,
+        to: n.id,
+      })),
+    };
+    expect(desiredFromTopology(t, true, 5).nodes.backends).toHaveLength(5);
+    expect(desiredFromTopology(t, true).nodes.backends).toHaveLength(6);
+    expect(liveProblems(t, 5).map((p) => p.message)).toContain(
+      'At most 5 backends; this one is ignored.',
+    );
+    expect(liveProblems(t).some((p) => p.message.startsWith('At most'))).toBe(false);
+  });
+
+  it("shows the instance's own CPU once it reports", () => {
+    const svc = T.nodes.find((n) => n.kind === 'service')!;
+    const f = frame({
+      cloud,
+      backends: {
+        [svc.id]: backend({
+          host: { ...host('be1'), cpu: 0.42, rxBps: 2000, txBps: 9000 },
+        }),
+      },
+    });
+    expect(toSimSnapshot(f, T, [], null).view.nodes[svc.id]?.facts).toContainEqual([
+      'Instance CPU',
+      '42.0%',
+    ]);
+  });
+
+  it('holds clients past the AWS pool out of the design', () => {
+    const lb = T.nodes.find((n) => n.kind === 'lb')!;
+    const template = T.nodes.find((n) => n.kind === 'client')!;
+    const extra = Array.from({ length: 3 }, (_, i) => ({ ...template, id: `cl${i}` }));
+    const t: Topology = {
+      nodes: [...T.nodes.filter((n) => n.kind !== 'client'), ...extra],
+      edges: extra.map((n) => ({
+        ...T.edges[0]!,
+        id: `e${n.id}`,
+        from: n.id,
+        to: lb.id,
+      })),
+    };
+    expect(desiredFromTopology(t, true, 5, 2).nodes.clients).toHaveLength(2);
+    expect(liveProblems(t, 5, 2).map((p) => p.message)).toContain(
+      'At most 2 clients; this one is ignored.',
+    );
+  });
+
+  it('asks the bridge to stop, only through its API', async () => {
+    const fetchImpl = vi.fn(async () => new Response('{}', { status: 202 }));
+    const engine = new LiveEngine(T, fetchImpl as unknown as typeof fetch);
+    engine.stopCloud();
+    await vi.waitFor(() => expect(fetchImpl).toHaveBeenCalled());
+    expect(fetchImpl.mock.calls[0]![0 as never]).toBe('/api/v1/cloud/stop');
+  });
+});

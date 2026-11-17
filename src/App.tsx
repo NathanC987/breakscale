@@ -2755,7 +2755,10 @@ export default function App() {
 
         <div className="app-island app-island-load">
           {LIVE && engine instanceof LiveEngine && (
-            <LiveStatus view={engine.liveView()} />
+            <LiveStatus
+              view={engine.liveView()}
+              onStopCloud={() => engine.stopCloud()}
+            />
           )}
           <TrafficControl
             rps={offeredRps}

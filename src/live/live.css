@@ -39,6 +39,11 @@
   color: var(--text-faint);
 }
 
+.live-status-cloud {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-faint);
+}
+
 .live-status {
   display: inline-flex;
   align-items: center;

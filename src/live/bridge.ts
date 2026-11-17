@@ -29,6 +29,7 @@ export interface BridgeFault {
 }
 
 export type BackendPhase =
+  | 'booting'
   | 'starting'
   | 'serving'
   | 'unhealthy'
@@ -38,7 +39,38 @@ export type BackendPhase =
   | 'pending'
   | 'detached';
 
+/** The EC2 instance under a node, when the bridge is driving AWS. */
+export interface BridgeHost {
+  role: string;
+  id: string;
+  type: string;
+  state: 'stopped' | 'starting' | 'ready' | 'stopping';
+  /** The whole instance's CPU (share of all its vCPUs) and network, once it reports. */
+  cpu?: number;
+  rxBps?: number;
+  txBps?: number;
+}
+
+/** Present only when the bridge is driving AWS (bridge/cloud_bridge.py). */
+export interface BridgeCloud {
+  provider: 'aws';
+  region: string;
+  stack: string;
+  /** How many backends and clients the stack's pool has. AWS itself enforces this. */
+  maxBackends: number;
+  maxClients: number;
+  hosts: BridgeHost[];
+  running: number;
+  usdPerHour: number;
+  spentUsd: number;
+  budgetUsd: number;
+  sessionLeftS: number;
+  /** Why everything is being stopped, once it is. */
+  stopping: string | null;
+}
+
 export interface BridgeBackend {
+  host?: BridgeHost | null;
   slot: number | null;
   lbId: number | null;
   addr: string | null;
@@ -94,8 +126,9 @@ export interface BridgeTrace {
 }
 
 export interface BridgeClient {
+  host?: BridgeHost | null;
   ip: string | null;
-  state: 'running' | 'paused' | 'disconnected' | 'exited';
+  state: 'running' | 'paused' | 'disconnected' | 'exited' | 'booting' | 'pending';
   config: {
     rps: number;
     timeoutMs: number;
@@ -128,8 +161,9 @@ export interface BridgeClient {
 }
 
 export interface BridgeLb {
+  host?: BridgeHost | null;
   id: string | null;
-  state: 'running' | 'stopped';
+  state: 'running' | 'stopped' | 'booting';
   pid: number | null;
   /** Fraction of one core used by the datapath thread. */
   cpuDatapath: number;
@@ -158,6 +192,7 @@ export interface BridgeLb {
     ctTcpTimeoutMs: number;
     ctUdpTimeoutMs: number;
     tableSize: number;
+    /** 0 where it has not been measured, as on the AWS hosts. */
     measuredCeilingPps: number;
   };
 }
@@ -193,6 +228,7 @@ export interface BridgeSnapshot {
   }[];
   system: { latencyMs: Latency };
   events: BridgeEvent[];
+  cloud?: BridgeCloud;
 }
 
 function isObj(x: unknown): x is Record<string, unknown> {

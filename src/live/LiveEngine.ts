@@ -135,6 +135,11 @@ export class LiveEngine implements AppEngine {
     this.act({ action: 'undrain', target: nodeId });
   }
 
+  /** Stops every instance on AWS and ends the bridge. Only offered when on AWS. */
+  stopCloud(): void {
+    void this.post('/cloud/stop', {});
+  }
+
   /** Pause and play: the real clients stop and start sending. */
   setLoadEnabled(on: boolean): void {
     if (on === this.loadEnabled) return;
@@ -259,6 +264,7 @@ export class LiveEngine implements AppEngine {
       lb: null,
       returnEdges: [],
       events: [],
+      cloud: null,
     };
   }
 
@@ -280,10 +286,18 @@ export class LiveEngine implements AppEngine {
     this.view = {
       ...view,
       connection: this.conn,
-      problems: liveProblems(this.topology),
+      problems: liveProblems(this.topology, this.maxBackends(), this.maxClients()),
       errors: this.lastError ? [...view.errors, this.lastError] : view.errors,
       events: this.eventLog,
     };
+  }
+
+  private maxBackends(): number | undefined {
+    return this.last?.cloud?.maxBackends;
+  }
+
+  private maxClients(): number | undefined {
+    return this.last?.cloud?.maxClients;
   }
 
   /* ---- writes ----------------------------------------------------------- */
@@ -304,7 +318,12 @@ export class LiveEngine implements AppEngine {
     }
     this.putInFlight = true;
     try {
-      const doc = desiredFromTopology(this.topology, this.loadEnabled);
+      const doc = desiredFromTopology(
+        this.topology,
+        this.loadEnabled,
+        this.maxBackends(),
+        this.maxClients(),
+      );
       const res = await this.fetchImpl(`${API}/desired`, {
         method: 'PUT',
         headers: this.headers(true),

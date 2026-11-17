@@ -11,8 +11,10 @@ import type {
 import type {
   BridgeBackend,
   BridgeClient,
+  BridgeCloud,
   BridgeEvent,
   BridgeFaultKind,
+  BridgeHost,
   BridgeSnapshot,
 } from './bridge';
 import type { LiveProblem } from './validate';
@@ -104,6 +106,8 @@ export interface LiveView {
   lb: LiveLbFacts | null;
   returnEdges: readonly ReturnEdge[];
   events: readonly BridgeEvent[];
+  /** Set when the bridge is driving AWS rather than local namespaces. */
+  cloud: BridgeCloud | null;
 }
 
 export function emptyStats(over: Partial<NodeStats> = {}): NodeStats {
@@ -240,6 +244,7 @@ function backendEdge(b: BridgeBackend | undefined): [number, EdgeState] {
   const flow = alive ? num(b.rates?.arrivals) : num(b.lb.flowsAssignedPs);
   if (b.fault?.kind === 'partition') return [flow, 'cut'];
   switch (b.phase) {
+    case 'booting':
     case 'starting':
     case 'stopping':
     case 'pending':
@@ -260,6 +265,23 @@ function fmt(x: number, digits = 0): string {
   return Number.isFinite(x) ? x.toFixed(digits) : '0';
 }
 
+function hostFact(h: BridgeHost | null | undefined): [string, string][] {
+  if (!h) return [];
+  // Short labels and values: the inspector's fact column is narrow.
+  const facts: [string, string][] = [
+    ['EC2 instance', h.id],
+    ['Instance', `${h.type}, ${h.state}`],
+  ];
+  if (h.cpu !== undefined) {
+    facts.push(['Instance CPU', `${fmt(num(h.cpu) * 100, 1)}%`]);
+    facts.push([
+      'Network kB/s',
+      `${fmt(num(h.rxBps) / 1000, 1)} in, ${fmt(num(h.txBps) / 1000, 1)} out`,
+    ]);
+  }
+  return facts;
+}
+
 function backendView(b: BridgeBackend): LiveNodeView {
   const badge =
     b.fault?.kind === 'partition' && b.phase === 'serving'
@@ -269,7 +291,7 @@ function backendView(b: BridgeBackend): LiveNodeView {
         : b.phase === 'unhealthy'
           ? 'down'
           : b.phase;
-  const facts: [string, string][] = [['State', b.phase]];
+  const facts: [string, string][] = [['State', b.phase], ...hostFact(b.host)];
   if (b.addr) facts.push(['Address', b.addr]);
   if (b.lb) {
     facts.push(['Load balancer health', b.lb.up ? 'up' : 'down']);
@@ -295,6 +317,7 @@ function clientView(c: BridgeClient): LiveNodeView {
     c.behind || overload > 0 ? 'saturated' : c.state === 'running' ? null : c.state;
   const facts: [string, string][] = [
     ['State', c.state],
+    ...hostFact(c.host),
     ['Source address', c.ip ?? '-'],
     ['Open connections', fmt(c.openConns)],
     ['Retries per second', fmt(c.rates.retries, 1)],
@@ -385,9 +408,14 @@ export function toSimSnapshot(
     });
     const facts: [string, string][] = [
       ['State', lb.state],
+      ...hostFact(lb.host),
       ['Datapath CPU', `${fmt(num(lb.cpuDatapath) * 100, 1)}% of one core`],
       ['Packets per second', `${fmt(lb.rxPps)} in / ${fmt(lb.txPps)} out`],
-      ['Measured ceiling', `${fmt(lb.config.measuredCeilingPps / 1000)}k pkt/s`],
+      ...(lb.config.measuredCeilingPps > 0
+        ? ([
+            ['Measured ceiling', `${fmt(lb.config.measuredCeilingPps / 1000)}k pkt/s`],
+          ] as [string, string][])
+        : []),
       ['Flows in conntrack', fmt(lb.conntrack.activeFlows)],
       ['Conntrack idle timeout', `${fmt(lb.config.ctTcpTimeoutMs / 1000)} s`],
       ['Eligible backends', fmt(lb.backendsEligible)],
@@ -563,6 +591,7 @@ export function toSimSnapshot(
         : null,
       returnEdges,
       events: msg.events,
+      cloud: msg.cloud ?? null,
     },
   };
 }
