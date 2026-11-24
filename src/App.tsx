@@ -26,7 +26,7 @@ import { connectionProblem } from './live/validate';
 import { LivePanel } from './live/LivePanel';
 import { LiveTables } from './live/LiveTables';
 import { useTablesPage } from './live/tablesPage';
-import { LiveCloud, LiveStatus } from './live/LiveStatus';
+import { LiveStatus } from './live/LiveStatus';
 import { PRESETS, makeNode } from './sim/presets';
 import { CHALLENGES, challengeById } from './sim/challenges';
 import { FIXED_DURING_CHALLENGE, applyLoad, evaluate } from './sim/challenge';
@@ -2897,9 +2897,6 @@ export default function App() {
             />
           </div>
         </div>
-        {LIVE && engine instanceof LiveEngine && (
-          <LiveCloud view={engine.liveView()} onStop={() => engine.stopCloud()} />
-        )}
       </header>
 
       {/*

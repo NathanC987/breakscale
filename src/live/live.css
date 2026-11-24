@@ -39,56 +39,6 @@
   color: var(--text-faint);
 }
 
-.live-status-cloud {
-  font-size: var(--fs-sm);
-  font-variant-numeric: tabular-nums;
-  color: var(--text-dim);
-}
-
-/* LiveCloud: a second row of the top bar, so the AWS line does not push the
-   load control and its readouts sideways. The bar's height is measured
-   (--bar-clear), so the panels under it move down to clear the row. */
-.app-bar:has(> .live-cloud-row) {
-  flex-wrap: wrap;
-  row-gap: var(--sp-2);
-}
-
-/* With wrapping on, the load island would otherwise break onto its own line
-   whenever its content is wider than the room left; from a zero basis it
-   still grows into that room, as before. (On a phone it already has a row.) */
-@media (min-width: 721px) {
-  .app-bar:has(> .live-cloud-row) > .app-island-load {
-    flex-basis: 0;
-  }
-}
-
-.live-cloud-row {
-  order: 9;
-  flex: 1 1 100%;
-  display: flex;
-  justify-content: center;
-  pointer-events: none;
-}
-
-.app-island.live-cloud {
-  min-height: 0;
-  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
-  border-radius: var(--r-pill);
-  box-shadow: var(--shadow-sm);
-}
-
-@media (max-width: 720px) {
-  .live-cloud-row {
-    justify-content: flex-start;
-    border-top: var(--bw) solid var(--border);
-  }
-
-  .app-island.live-cloud {
-    padding: var(--sp-2) var(--sp-3);
-    border-radius: 0;
-  }
-}
-
 .live-status {
   display: inline-flex;
   align-items: center;
@@ -411,15 +361,17 @@
   white-space: nowrap;
 }
 
-.lt-legend-sub {
-  grid-column: 2;
-  color: var(--text-faint);
+.lt-legend-ip {
+  margin-left: var(--sp-2);
+  font-weight: var(--fw-body);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
 }
 
-.lt-legend-sub.lt-legend-num {
+.lt-legend-sub {
   grid-column: 2 / 4;
   color: var(--text-dim);
-  text-align: left;
+  font-variant-numeric: tabular-nums;
 }
 
 .lt-stats {

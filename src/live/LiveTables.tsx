@@ -442,15 +442,18 @@ export function LiveTables({
                       tabIndex={0}
                     >
                       <Swatch lbId={b.lbId} />
-                      <span className="lt-legend-name">{nameOf(b.lbId, b.node)}</span>
+                      <span className="lt-legend-name">
+                        {nameOf(b.lbId, b.node)}
+                        {b.addr && <span className="lt-legend-ip">{b.addr}</span>}
+                      </span>
                       <span className="lt-legend-num">{pct(b.slots, m)}</span>
                       <span className="lt-legend-sub">
-                        {b.inTable
-                          ? `${b.addr ?? ''}${b.slots === 0 ? ' · draining: no new connections' : ''}`
-                          : `left the table; pins expire after ${timeoutS} s idle`}
-                      </span>
-                      <span className="lt-legend-sub lt-legend-num">
                         {fmt(b.slots)} slots · {fmt(b.flows)} pinned
+                        {b.inTable && b.slots === 0
+                          ? ' · draining: no new connections'
+                          : ''}
+                        {!b.inTable &&
+                          ` · left the table; pins expire after ${timeoutS} s idle`}
                       </span>
                     </li>
                   ))}

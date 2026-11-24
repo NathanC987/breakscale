@@ -9,21 +9,13 @@ const CONN_TEXT: Record<LiveView['connection'], string> = {
   unauthorized: 'Open the link the bridge printed: this tab has no access token',
 };
 
-function usd(x: number): string {
-  return `$${x.toFixed(2)}`;
-}
-
-function minutes(s: number): string {
-  return `${Math.ceil(s / 60)} min`;
-}
-
 /**
  * One line saying whether the numbers on screen are real right now, and if
  * not, why. Everything that goes wrong in live mode (no bridge, an expired
  * token, a design the real system cannot run) surfaces here rather than as
- * a canvas that silently stops moving. What AWS is running and costing is
- * LiveCloud's, on a row of its own under the bar, so this stays short and
- * the load control beside it keeps its room.
+ * a canvas that silently stops moving. It stays one short line, so the load
+ * control beside it keeps its room; what AWS is running and costing is on the
+ * Grafana dashboard (cloud/canvas.sh grafana).
  */
 export function LiveStatus({ view }: { view: LiveView }) {
   const issues = [...view.errors, ...view.problems.map((p) => p.message)];
@@ -47,44 +39,6 @@ export function LiveStatus({ view }: { view: LiveView }) {
           {issues.length === 1 ? '1 issue' : `${issues.length} issues`}
         </span>
       )}
-    </div>
-  );
-}
-
-/**
- * On AWS: what is running, what it is costing, and the way to stop it, as a
- * second row of the top bar. Nothing when the bridge runs locally.
- */
-export function LiveCloud({ view, onStop }: { view: LiveView; onStop?: () => void }) {
-  const cloud = view.cloud;
-  if (!cloud || view.connection !== 'live') return null;
-  return (
-    <div className="live-cloud-row">
-      <div
-        className="app-island live-cloud"
-        role="status"
-        aria-label="AWS usage"
-        data-chrome=""
-      >
-        <span
-          className="live-status-cloud"
-          title={`Estimated by the bridge. AWS's bill is the real number. Everything stops at ${usd(cloud.budgetUsd)}, or in ${minutes(cloud.sessionLeftS)}, or 10 minutes after the last tab closes.`}
-        >
-          AWS {cloud.region}: {cloud.running} of {cloud.hosts.length} instances running,{' '}
-          about {usd(cloud.usdPerHour)}/h, {usd(cloud.spentUsd)} so far
-        </span>
-        {onStop && (
-          <button
-            type="button"
-            className="btn btn-sm"
-            disabled={cloud.stopping !== null}
-            onClick={onStop}
-            title="Stops every EC2 instance and ends the bridge. Start again with cloud/canvas.sh run."
-          >
-            {cloud.stopping ? 'Stopping' : 'Stop all on AWS'}
-          </button>
-        )}
-      </div>
     </div>
   );
 }
