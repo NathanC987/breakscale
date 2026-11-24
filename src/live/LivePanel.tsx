@@ -112,13 +112,14 @@ export function LivePanel({
         <Section title="Look inside">
           <div className="live-actions">
             <button type="button" className="btn btn-sm" onClick={onOpenTables}>
-              Show its Maglev and conntrack tables
+              Open its Maglev and conntrack tables
             </button>
           </div>
           <p className="ins-hint">
             The real tables, copied out of maglev-lb
-            {onAws ? ' on its EC2 instance' : ''} every second. Keep them open while you
-            add, remove or drain a backend.
+            {onAws ? ' on its EC2 instance' : ''} every second, on a page of their own.
+            Come back here to add, remove or drain a backend, then open them again to
+            see which slots moved.
           </p>
         </Section>
       )}

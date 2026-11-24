@@ -6,6 +6,7 @@ import {
   describeChange,
   diffTables,
   gridRows,
+  gridShape,
   moduloMoved,
   ownerOf,
 } from './tables';
@@ -20,6 +21,19 @@ describe('the Maglev table', () => {
     expect([0, 1, 2, 3].map((s) => ownerOf(t, s))).toEqual([0, 1, null, 2]);
     expect(ownerOf(t, 99)).toBeNull();
     expect(gridRows(65537)).toBe(257);
+  });
+
+  it('fits the grid to the space it has, in whole device pixels per slot', () => {
+    // A wide box gets a wide grid: 4 px slots, 375 across.
+    expect(gridShape(65537, 1500, 800)).toEqual({ cols: 375, rows: 175, px: 4 });
+    // A tall, narrow box (a phone) gets a narrow one.
+    const phone = gridShape(65537, 1074, 1500);
+    expect(phone.px).toBe(4);
+    expect(phone.cols * phone.rows).toBeGreaterThanOrEqual(65537);
+    expect(phone.rows * phone.px).toBeLessThanOrEqual(1500);
+    // Not measured yet (or no layout, as in tests): the default shape.
+    expect(gridShape(65537, 0, 0)).toEqual({ cols: 256, rows: 257, px: 1 });
+    expect(gridShape(6, 300, 200)).toEqual({ cols: 3, rows: 2, px: 100 });
   });
 
   it('a removal moves only the removed backend’s slots', () => {

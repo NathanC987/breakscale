@@ -25,7 +25,8 @@ import { LIVE_PRESET } from './live/preset';
 import { connectionProblem } from './live/validate';
 import { LivePanel } from './live/LivePanel';
 import { LiveTables } from './live/LiveTables';
-import { LiveStatus } from './live/LiveStatus';
+import { useTablesPage } from './live/tablesPage';
+import { LiveCloud, LiveStatus } from './live/LiveStatus';
 import { PRESETS, makeNode } from './sim/presets';
 import { CHALLENGES, challengeById } from './sim/challenges';
 import { FIXED_DURING_CHALLENGE, applyLoad, evaluate } from './sim/challenge';
@@ -659,7 +660,7 @@ export default function App() {
   }, [themeChoice]);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
   /** Live mode: the sheet showing maglev-lb's real tables. */
-  const [tablesOpen, setTablesOpen] = useState(false);
+  const tablesPage = useTablesPage();
   const [glossaryFocusId, setGlossaryFocusId] = useState<string | undefined>(undefined);
 
   /** The keyboard shortcuts dialog. Ctrl+/ and the top-bar button. */
@@ -2758,10 +2759,7 @@ export default function App() {
 
         <div className="app-island app-island-load">
           {LIVE && engine instanceof LiveEngine && (
-            <LiveStatus
-              view={engine.liveView()}
-              onStopCloud={() => engine.stopCloud()}
-            />
+            <LiveStatus view={engine.liveView()} />
           )}
           <TrafficControl
             rps={offeredRps}
@@ -2899,6 +2897,9 @@ export default function App() {
             />
           </div>
         </div>
+        {LIVE && engine instanceof LiveEngine && (
+          <LiveCloud view={engine.liveView()} onStop={() => engine.stopCloud()} />
+        )}
       </header>
 
       {/*
@@ -3123,7 +3124,7 @@ export default function App() {
                   view={engine.liveView()}
                   engine={engine}
                   onChange={handleConfigChange}
-                  onOpenTables={() => setTablesOpen(true)}
+                  onOpenTables={tablesPage.show}
                 />
               ) : undefined
             }
@@ -3221,8 +3222,8 @@ export default function App() {
       <TooltipLayer />
       {LIVE && engine instanceof LiveEngine ? (
         <LiveTables
-          open={tablesOpen}
-          onClose={() => setTablesOpen(false)}
+          open={tablesPage.open}
+          onClose={tablesPage.hide}
           engine={engine}
           labelOf={(id) => topology.nodes.find((n) => n.id === id)?.label}
         />

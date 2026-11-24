@@ -76,11 +76,12 @@ describe('LiveTables', () => {
     const host = document.createElement('div');
     document.body.appendChild(host);
     const root = createRoot(host);
+    const onClose = vi.fn();
     act(() => {
       root.render(
         <LiveTables
           open
-          onClose={() => {}}
+          onClose={onClose}
           engine={engine}
           labelOf={(id) => names[id]}
         />,
@@ -94,6 +95,12 @@ describe('LiveTables', () => {
     expect(host.textContent).toContain('EC2 instance i-0abc (c7i-flex.large)');
     expect(host.textContent).toContain('Generation 1');
     expect(fetchTables).toHaveBeenLastCalledWith(null);
+    expect(host.textContent).toContain('No rebuild yet');
+    const toggle = () =>
+      [...host.querySelectorAll('button')].find((b) =>
+        /moved slots/.test(b.textContent ?? ''),
+      )!;
+    expect(toggle().disabled).toBe(true);
 
     await vi.waitFor(() => expect(host.textContent).toContain('Generation 1 → 2'), {
       timeout: 3000,
@@ -105,9 +112,25 @@ describe('LiveTables', () => {
     );
     expect(host.textContent).toContain('No other slot moved.');
     // The flow still pinned to the removed backend, and where its slot points now.
-    expect(host.querySelector('tr.is-differs')?.textContent).toContain(
-      'table now: Alpha',
-    );
+    const differs = host.querySelector('tr.is-differs')?.textContent ?? '';
+    expect(differs).toContain('Removed backend (slot 3)');
+    expect(differs).toContain('Alpha · the pin wins');
+    // The moved slots are marked until hidden.
+    expect(toggle().disabled).toBe(false);
+    expect(toggle().getAttribute('aria-pressed')).toBe('true');
+    act(() => toggle().click());
+    expect(toggle().textContent).toContain('Show moved slots');
+
+    // Keys stop at the page, so the canvas underneath never sees Delete; Escape closes it.
+    const seen = vi.fn();
+    window.addEventListener('keydown', seen);
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    });
+    window.removeEventListener('keydown', seen);
+    expect(seen).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
     act(() => root.unmount());
   });
 });

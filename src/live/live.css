@@ -40,8 +40,53 @@
 }
 
 .live-status-cloud {
+  font-size: var(--fs-sm);
   font-variant-numeric: tabular-nums;
-  color: var(--text-faint);
+  color: var(--text-dim);
+}
+
+/* LiveCloud: a second row of the top bar, so the AWS line does not push the
+   load control and its readouts sideways. The bar's height is measured
+   (--bar-clear), so the panels under it move down to clear the row. */
+.app-bar:has(> .live-cloud-row) {
+  flex-wrap: wrap;
+  row-gap: var(--sp-2);
+}
+
+/* With wrapping on, the load island would otherwise break onto its own line
+   whenever its content is wider than the room left; from a zero basis it
+   still grows into that room, as before. (On a phone it already has a row.) */
+@media (min-width: 721px) {
+  .app-bar:has(> .live-cloud-row) > .app-island-load {
+    flex-basis: 0;
+  }
+}
+
+.live-cloud-row {
+  order: 9;
+  flex: 1 1 100%;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.app-island.live-cloud {
+  min-height: 0;
+  padding: var(--sp-1) var(--sp-1) var(--sp-1) var(--sp-3);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 720px) {
+  .live-cloud-row {
+    justify-content: flex-start;
+    border-top: var(--bw) solid var(--border);
+  }
+
+  .app-island.live-cloud {
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: 0;
+  }
 }
 
 .live-status {
@@ -143,37 +188,38 @@
   --lt-moved: #f0efec;
 }
 
-.lt-sheet {
+/* A page over the whole window, under the dialogs (500) and tooltips (400). It
+   is its own scroller; the header stays put while the conntrack table scrolls. */
+.lt-page {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  /* Above the canvas and panels, below the dialogs (500) and tooltips (400). */
+  inset: 0;
   z-index: 350;
-  display: flex;
-  flex-direction: column;
-  width: min(560px, 100vw);
-  min-height: 0;
-  background: var(--surface);
-  border-left: var(--bw) solid var(--border);
-  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--bg);
   animation: lt-in var(--dur-slow) var(--ease-out);
 }
 
 @keyframes lt-in {
   from {
     opacity: 0;
-    transform: translateX(16px);
   }
 }
 
 .lt-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--sp-3);
-  padding: var(--sp-4);
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  background: var(--surface);
   border-bottom: var(--bw) solid var(--border);
+}
+
+.lt-head-text {
+  min-width: 0;
 }
 
 .lt-title {
@@ -181,23 +227,41 @@
   font-size: var(--fs-base);
   font-weight: var(--fw-med);
   color: var(--text);
+  outline: none;
 }
 
 .lt-source {
-  margin: var(--sp-1) 0 0;
+  margin: 0;
   font-size: var(--fs-sm);
   color: var(--text-dim);
 }
 
 .lt-body {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 0 var(--sp-4) var(--sp-4);
+  padding: var(--sp-4);
 }
 
-.lt-section {
-  padding-top: var(--sp-4);
+/* The grid and its narrow column. The grid's box takes all the width the
+   column leaves; LiveTables.tsx sizes the grid inside it. */
+.lt-maglev {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-5);
+}
+
+.lt-grid-box {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.lt-side {
+  flex: 0 0 300px;
+  min-width: 0;
+}
+
+.lt-ct {
+  margin-top: var(--sp-7);
+  padding-top: var(--sp-5);
+  border-top: var(--bw) solid var(--border);
 }
 
 .lt-h {
@@ -209,13 +273,31 @@
   color: var(--text-dim);
 }
 
+.lt-h-gap {
+  margin-top: var(--sp-5);
+}
+
 .lt-prose,
 .lt-hint,
-.lt-readout {
+.lt-readout,
+.lt-gen {
   margin: 0 0 var(--sp-2);
   font-size: var(--fs-sm);
   line-height: var(--lh-sm);
   color: var(--text-dim);
+}
+
+.lt-ct .lt-prose {
+  max-width: 80ch;
+}
+
+.lt-gen {
+  color: var(--text);
+}
+
+.lt-gen strong {
+  font-weight: var(--fw-med);
+  font-variant-numeric: tabular-nums;
 }
 
 .lt-hint {
@@ -223,15 +305,18 @@
   color: var(--text-faint);
 }
 
+/* Two lines tall whatever it says, so pointing at the grid moves nothing below. */
 .lt-readout {
-  margin-top: var(--sp-2);
+  min-height: calc(2em * var(--lh-sm) + 2 * var(--sp-2));
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
   font-variant-numeric: tabular-nums;
   color: var(--text);
-  min-height: 1.5em;
 }
 
 .lt-alert {
-  margin: var(--sp-4) 0 0;
+  margin: 0 0 var(--sp-4);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   background: var(--warn-soft);
@@ -241,17 +326,15 @@
 
 .lt-grid-wrap {
   position: relative;
-  width: 100%;
-  max-width: 512px;
+  max-width: 100%;
 }
 
 .lt-grid {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   image-rendering: pixelated;
-  border: var(--bw) solid var(--border);
-  border-radius: var(--r-sm);
+  outline: var(--bw) solid var(--border);
   cursor: crosshair;
   touch-action: none;
 }
@@ -269,13 +352,10 @@
 
 .lt-change {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: var(--sp-2);
-  margin-top: var(--sp-2);
-  padding: var(--sp-2) var(--sp-3);
-  border-radius: var(--r-sm);
-  background: var(--surface-2);
+  margin-top: var(--sp-3);
   font-size: var(--fs-sm);
   line-height: var(--lh-sm);
   color: var(--text);
@@ -283,7 +363,98 @@
 
 .lt-change p {
   margin: 0;
-  flex: 1 1 260px;
+}
+
+/* The backends, as a legend: swatch, name and share on the first line; address,
+   slots and pinned connections under it. */
+.lt-legend {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+}
+
+.lt-legend li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  column-gap: var(--sp-2);
+  align-items: baseline;
+  padding: var(--sp-2);
+  border-bottom: var(--bw) solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  cursor: default;
+}
+
+.lt-legend li:hover,
+.lt-legend li:focus-visible,
+.lt-legend li.is-focus {
+  background: var(--surface-2);
+  outline: none;
+}
+
+.lt-legend .lt-swatch {
+  margin: 0;
+}
+
+.lt-legend-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--fw-med);
+}
+
+.lt-legend-num {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.lt-legend-sub {
+  grid-column: 2;
+  color: var(--text-faint);
+}
+
+.lt-legend-sub.lt-legend-num {
+  grid-column: 2 / 4;
+  color: var(--text-dim);
+  text-align: left;
+}
+
+.lt-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3);
+  margin: 0 0 var(--sp-3);
+}
+
+.lt-stats div {
+  min-width: 160px;
+  padding: var(--sp-2) var(--sp-3);
+  border: var(--bw) solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+}
+
+.lt-stats dt {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.lt-stats dd {
+  margin: 0;
+  font-size: var(--fs-num);
+  font-weight: var(--fw-med);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.lt-flows {
+  overflow-x: auto;
+  border: var(--bw) solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--surface);
 }
 
 .lt-table {
@@ -295,17 +466,16 @@
 }
 
 .lt-table th {
-  position: sticky;
-  top: 0;
-  padding: var(--sp-1) var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
   background: var(--surface-3);
   font-weight: var(--fw-med);
   text-align: left;
   color: var(--text-dim);
+  white-space: nowrap;
 }
 
 .lt-table td {
-  padding: var(--sp-1) var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
   border-bottom: var(--bw) solid var(--border);
   vertical-align: top;
 }
@@ -320,8 +490,7 @@
 }
 
 .lt-table tbody tr:hover,
-.lt-table tbody tr:focus-visible,
-.lt-table tbody tr.is-focus {
+.lt-table tbody tr:focus-visible {
   background: var(--surface-2);
   outline: none;
 }
@@ -347,19 +516,24 @@
   vertical-align: baseline;
 }
 
-.lt-flows {
-  max-height: 320px;
-  overflow-y: auto;
-  border: var(--bw) solid var(--border);
-  border-radius: var(--r-sm);
-}
-
 .lt-nowrap {
   white-space: nowrap;
 }
 
-.lt-key {
-  display: block;
-  margin-top: var(--sp-1);
-  color: var(--text-dim);
+/* A phone: the column goes under the grid. */
+@media (max-width: 720px) {
+  .lt-maglev {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lt-grid-box,
+  .lt-side {
+    flex: none;
+  }
+
+  .lt-head {
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+  }
 }

@@ -1,14 +1,21 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { BridgeFlowRow, BridgeTables, TablesResult } from './bridge';
 import type { LiveEngine } from './LiveEngine';
 import {
   type DescribedChange,
-  GRID_COLS,
+  type GridShape,
   decodeTable,
   describeChange,
   diffTables,
   fmt,
-  gridRows,
+  gridShape,
   moduloMoved,
   ownerOf,
   pct,
@@ -18,22 +25,29 @@ import './live.css';
 /* ==========================================================================
    Inside maglev-lb: its live Maglev lookup table and conntrack table.
 
-   A side sheet with no scrim, unlike the glossary: the point is to change the
-   design on the canvas (remove a backend, drain one) and watch both tables
-   react, so the canvas must stay usable behind it.
+   A page of its own over the whole window (useTablesPage in tablesPage.ts
+   opens and closes it, and the browser's Back button closes it too). The
+   Maglev grid gets most of the window, sized to fit it in whole device
+   pixels per slot; the facts, the moved-slot toggle and the backends sit in
+   a narrow column to its right, and the conntrack table runs underneath.
 
    The data is maglev-lb's own (src/ui/inspector.c), read once a second while
    this is open; maglev-lb copies its tables only while someone is asking.
+   The last table seen is kept while the page is closed, so going back to the
+   canvas, removing a backend and coming back shows what that rebuild moved.
 
    Five backends cannot all be told apart by hue alone on a grid where any two
    may touch (checked with the palette validator), so hue is never the only
-   cue: pointing at a backend in the table fades every other backend's slots,
-   and pointing at a slot names its owner.
+   cue: pointing at a backend fades every other backend's slots, and pointing
+   at a slot names its owner.
    ========================================================================== */
 
 const POLL_MS = 1000;
-const MOVED_SHOW_MS = 6000;
 const SERIES = 5;
+/** The grid never shrinks below this height to fit a short window. */
+const MIN_GRID_H = 240;
+/** Room left under the grid, in CSS px, so its bottom edge is not flush with the window. */
+const GRID_BOTTOM_GAP = 16;
 
 interface Held {
   run: number | null;
@@ -41,11 +55,24 @@ interface Held {
   table: Uint8Array;
 }
 
+type Shape = GridShape & { dpr: number };
+
 function rgb(hex: string): [number, number, number] {
   const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
   if (!m) return [128, 128, 128];
   const v = parseInt(m[1]!, 16);
   return [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+}
+
+function isTyping(t: EventTarget | null): boolean {
+  const el = t as HTMLElement | null;
+  if (!el || typeof el.tagName !== 'string') return false;
+  return (
+    el.tagName === 'INPUT' ||
+    el.tagName === 'TEXTAREA' ||
+    el.tagName === 'SELECT' ||
+    el.isContentEditable === true
+  );
 }
 
 export function LiveTables({
@@ -67,6 +94,10 @@ export function LiveTables({
   const [focus, setFocus] = useState<number | null>(null);
   const [hoverSlot, setHoverSlot] = useState<number | null>(null);
   const [markSlot, setMarkSlot] = useState<number | null>(null);
+  const [shape, setShape] = useState<Shape>(() => ({
+    ...gridShape(0, 0, 0),
+    dpr: 1,
+  }));
   /** The table being shown. The poller reads it through heldRef (no re-subscribe per poll). */
   const [held, setHeldState] = useState<Held | null>(null);
   const heldRef = useRef<Held | null>(null);
@@ -75,7 +106,9 @@ export function LiveTables({
     setHeldState(h);
   };
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const sheetRef = useRef<HTMLElement | null>(null);
+  const pageRef = useRef<HTMLDivElement | null>(null);
+  const gridBoxRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
 
   /* Poll while open. Each request names the generation already held, so the
      table itself only travels when it changes. */
@@ -128,32 +161,83 @@ export function LiveTables({
     };
   }, [open, engine]);
 
+  /* A page over the whole window: focus moves onto it and back to whatever
+     opened it, and keys stop here, so Delete cannot remove the load balancer
+     still selected on the canvas underneath. Escape closes it. */
   useEffect(() => {
-    if (!showMoved) return;
-    const t = setTimeout(() => setShowMoved(false), MOVED_SHOW_MS);
-    return () => clearTimeout(t);
-  }, [showMoved, change]);
+    if (!open) return;
+    const opener = document.activeElement as HTMLElement | null;
+    titleRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (isTyping(e.target)) return;
+      e.stopPropagation();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      if (opener?.isConnected) opener.focus();
+    };
+  }, [open, onClose]);
 
-  /* Draw the grid: one pixel per slot, scaled up by CSS. */
+  const m = doc?.m ?? 0;
+  const ready = Boolean(doc && held);
+
+  /* Fit the grid to the space it has: the width of its column, and the window
+     height below the page header. */
+  useLayoutEffect(() => {
+    const box = gridBoxRef.current;
+    const page = pageRef.current;
+    if (!open || !ready || !box || !page || m <= 0) return;
+    const measure = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const top =
+        box.getBoundingClientRect().top -
+        page.getBoundingClientRect().top +
+        page.scrollTop;
+      const height = Math.max(MIN_GRID_H, page.clientHeight - top - GRID_BOTTOM_GAP);
+      const next = gridShape(m, box.clientWidth * dpr, height * dpr);
+      setShape((s) =>
+        s.cols === next.cols &&
+        s.rows === next.rows &&
+        s.px === next.px &&
+        s.dpr === dpr
+          ? s
+          : { ...next, dpr },
+      );
+    };
+    measure();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(measure);
+    ro.observe(box);
+    ro.observe(page);
+    return () => ro.disconnect();
+  }, [open, ready, m]);
+
+  /* Draw the grid: one canvas pixel per slot, scaled up by a whole number of
+     device pixels. */
   useEffect(() => {
     const canvas = canvasRef.current;
     const h = held;
     if (!open || !canvas || !h || !doc) return;
-    const css = getComputedStyle(sheetRef.current ?? canvas);
+    const css = getComputedStyle(pageRef.current ?? canvas);
     const colors = Array.from({ length: SERIES }, (_, i) =>
       rgb(css.getPropertyValue(`--lt-be-${i + 1}`)),
     );
     const track = rgb(css.getPropertyValue('--lt-empty'));
     const faint = rgb(css.getPropertyValue('--lt-faded'));
     const ink = rgb(css.getPropertyValue('--lt-moved'));
-    const rows = gridRows(h.table.length);
-    canvas.width = GRID_COLS;
+    const { cols, rows } = shape;
+    canvas.width = cols;
     canvas.height = rows;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const img = ctx.createImageData(GRID_COLS, rows);
+    const img = ctx.createImageData(cols, rows);
     const moved = showMoved && change?.toGeneration === h.gen ? change.moved : null;
-    for (let i = 0; i < GRID_COLS * rows; i++) {
+    for (let i = 0; i < cols * rows; i++) {
       let c: [number, number, number];
       const v = i < h.table.length ? h.table[i]! : -1;
       if (v < 0) c = faint;
@@ -164,7 +248,7 @@ export function LiveTables({
       img.data.set([c[0], c[1], c[2], v < 0 ? 0 : 255], i * 4);
     }
     ctx.putImageData(img, 0, 0);
-  }, [open, doc, held, focus, showMoved, change]);
+  }, [open, doc, held, focus, showMoved, change, shape]);
 
   const nameOf = useCallback(
     (lbId: number, node: string | null) =>
@@ -204,21 +288,10 @@ export function LiveTables({
     [doc],
   );
 
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && sheetRef.current?.contains(document.activeElement))
-        onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
-
   if (!open) return null;
 
   const h = held;
-  const m = doc?.m ?? 0;
-  const rows = gridRows(m || 1);
+  const { cols, rows, px, dpr } = shape;
   const slotInfo = (slot: number) => {
     if (!h) return null;
     const id = ownerOf(h.table, slot);
@@ -231,28 +304,38 @@ export function LiveTables({
   };
   const hover = hoverSlot === null ? null : slotInfo(hoverSlot);
   const markAt = (slot: number) => ({
-    left: `${((slot % GRID_COLS) + 0.5) * (100 / GRID_COLS)}%`,
-    top: `${(Math.floor(slot / GRID_COLS) + 0.5) * (100 / rows)}%`,
+    left: `${((slot % cols) + 0.5) * (100 / cols)}%`,
+    top: `${(Math.floor(slot / cols) + 0.5) * (100 / rows)}%`,
   });
+  const currentChange =
+    change && doc && change.toGeneration === doc.generation ? change : null;
+  const timeoutS = doc ? fmt(Math.round(doc.ctTimeoutMs / 1000)) : '';
 
   const onGridMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
-    const col = Math.floor(((e.clientX - r.left) / r.width) * GRID_COLS);
+    const col = Math.floor(((e.clientX - r.left) / r.width) * cols);
     const row = Math.floor(((e.clientY - r.top) / r.height) * rows);
-    const slot = row * GRID_COLS + col;
-    setHoverSlot(col >= 0 && col < GRID_COLS && slot >= 0 && slot < m ? slot : null);
+    const slot = row * cols + col;
+    setHoverSlot(col >= 0 && col < cols && slot >= 0 && slot < m ? slot : null);
   };
 
   return (
-    <aside
-      ref={sheetRef}
-      className="lt-sheet"
-      aria-label="Inside maglev-lb: its Maglev and conntrack tables"
+    <div
+      ref={pageRef}
+      className="lt-page"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="lt-title"
       data-chrome=""
     >
       <header className="lt-head">
-        <div>
-          <h2 className="lt-title">Inside maglev-lb</h2>
+        <button type="button" className="btn btn-sm" onClick={onClose}>
+          <span aria-hidden="true">←</span> Back to the canvas
+        </button>
+        <div className="lt-head-text">
+          <h2 id="lt-title" className="lt-title" ref={titleRef} tabIndex={-1}>
+            Inside maglev-lb
+          </h2>
           <p className="lt-source">
             {doc?.source.where === 'aws'
               ? `Read from maglev-lb on EC2 instance ${doc.source.instance ?? '?'}${
@@ -261,100 +344,95 @@ export function LiveTables({
               : 'Read from maglev-lb on this machine, every second.'}
           </p>
         </div>
-        <button type="button" className="btn btn-sm" onClick={onClose}>
-          Close
-        </button>
       </header>
 
       <div className="lt-body">
         {status?.kind === 'error' && <p className="lt-alert">{status.message}</p>}
-        {!doc && status?.kind !== 'error' && (
+        {!ready && status?.kind !== 'error' && (
           <p className="ins-hint">Asking maglev-lb for a copy of its tables…</p>
         )}
 
         {doc && h && (
           <>
-            <section className="lt-section">
-              <h3 className="lt-h">Maglev lookup table</h3>
-              <p className="lt-prose">
-                {fmt(m)} slots, one pixel each. A new connection’s addresses and ports
-                hash to one slot, and the slot’s backend gets it. Generation{' '}
-                {fmt(doc.generation)}: rebuilt each time a backend joins, leaves, fails
-                or drains.
-              </p>
-
-              <div className="lt-grid-wrap">
-                <canvas
-                  ref={canvasRef}
-                  className="lt-grid"
-                  style={{ aspectRatio: `${GRID_COLS} / ${rows}` }}
-                  role="img"
-                  aria-label={`Maglev table, ${fmt(m)} slots: ${backends
-                    .filter((b) => b.inTable && b.slots > 0)
-                    .map((b) => `${nameOf(b.lbId, b.node)} ${pct(b.slots, m)}`)
-                    .join(', ')}`}
-                  onPointerMove={onGridMove}
-                  onPointerLeave={() => setHoverSlot(null)}
-                />
-                {markSlot !== null && (
-                  <span
-                    className="lt-mark"
-                    style={markAt(markSlot)}
-                    aria-hidden="true"
+            <section className="lt-maglev" aria-labelledby="lt-maglev-h">
+              <div className="lt-grid-box" ref={gridBoxRef}>
+                <div
+                  className="lt-grid-wrap"
+                  style={{ width: (cols * px) / dpr, height: (rows * px) / dpr }}
+                >
+                  <canvas
+                    ref={canvasRef}
+                    className="lt-grid"
+                    role="img"
+                    aria-label={`Maglev table, ${fmt(m)} slots: ${backends
+                      .filter((b) => b.inTable && b.slots > 0)
+                      .map((b) => `${nameOf(b.lbId, b.node)} ${pct(b.slots, m)}`)
+                      .join(', ')}`}
+                    onPointerMove={onGridMove}
+                    onPointerLeave={() => setHoverSlot(null)}
                   />
-                )}
+                  {markSlot !== null && (
+                    <span
+                      className="lt-mark"
+                      style={markAt(markSlot)}
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
               </div>
-              <p className="lt-readout" aria-live="off">
-                {hover && hoverSlot !== null
-                  ? `Slot ${fmt(hoverSlot)} → ${hover.name}${hover.addr ? ` (${hover.addr})` : ''}`
-                  : 'Point at the grid to read a slot.'}
-              </p>
 
-              {change && change.toGeneration === doc.generation && (
+              <div className="lt-side">
+                <h3 id="lt-maglev-h" className="lt-h">
+                  Maglev lookup table
+                </h3>
+                <p className="lt-prose">
+                  {fmt(m)} slots, one square each, numbered left to right and top to
+                  bottom. A new connection’s addresses and ports hash to one slot, and
+                  the slot’s backend gets it.
+                </p>
+                <p className="lt-gen">
+                  Generation <strong>{fmt(doc.generation)}</strong>
+                  <span className="lt-dim">
+                    {' '}
+                    · rebuilt when a backend joins, leaves, fails or drains
+                  </span>
+                </p>
+                <p className="lt-readout" aria-live="off">
+                  {hover && hoverSlot !== null
+                    ? `Slot ${fmt(hoverSlot)} → ${hover.name}${hover.addr ? ` (${hover.addr})` : ''}`
+                    : 'Point at the grid to read a slot.'}
+                </p>
+
                 <div className="lt-change">
                   <p>
-                    {describeChange(change, (id: number) =>
-                      nameOf(id, nodeOfId(doc, id)),
-                    )}
-                    {showMoved && (
-                      <span className="lt-key">
-                        <span
-                          className="lt-swatch"
-                          style={{ background: 'var(--lt-moved)' }}
-                          aria-hidden="true"
-                        />
-                        marks them on the grid.
-                      </span>
-                    )}
+                    {currentChange
+                      ? describeChange(currentChange, (id: number) =>
+                          nameOf(id, nodeOfId(doc, id)),
+                        )
+                      : 'No rebuild yet. Remove, drain or add a backend on the canvas and come back: the slots that changed owner are marked here.'}
                   </p>
                   <button
                     type="button"
                     className="btn btn-sm"
+                    aria-pressed={showMoved && currentChange !== null}
+                    disabled={!currentChange}
                     onClick={() => setShowMoved((s) => !s)}
                   >
-                    {showMoved ? 'Hide the moved slots' : 'Show the moved slots'}
+                    <span
+                      className="lt-swatch"
+                      style={{ background: 'var(--lt-moved)' }}
+                      aria-hidden="true"
+                    />
+                    {showMoved && currentChange
+                      ? 'Hide moved slots'
+                      : 'Show moved slots'}
                   </button>
                 </div>
-              )}
-            </section>
 
-            <section className="lt-section">
-              <h3 className="lt-h">Backends</h3>
-              <table className="lt-table">
-                <thead>
-                  <tr>
-                    <th scope="col">Backend</th>
-                    <th scope="col" className="num">
-                      Slots
-                    </th>
-                    <th scope="col" className="num">
-                      Pinned connections
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+                <h3 className="lt-h lt-h-gap">Backends</h3>
+                <ul className="lt-legend">
                   {backends.map((b) => (
-                    <tr
+                    <li
                       key={b.lbId}
                       className={focus === b.lbId ? 'is-focus' : undefined}
                       onPointerEnter={() => setFocus(b.lbId)}
@@ -363,56 +441,62 @@ export function LiveTables({
                       onBlur={() => setFocus(null)}
                       tabIndex={0}
                     >
-                      <td>
-                        <span
-                          className="lt-swatch"
-                          style={{
-                            background: `var(--lt-be-${(b.lbId % SERIES) + 1})`,
-                          }}
-                          aria-hidden="true"
-                        />
-                        {nameOf(b.lbId, b.node)}
-                        <span className="lt-dim">
-                          {' '}
-                          {b.addr ??
-                            `left the table; its pins expire after ${fmt(
-                              Math.round(doc.ctTimeoutMs / 1000),
-                            )} s idle`}
-                          {b.inTable && b.slots === 0
-                            ? ' · draining: no new connections'
-                            : ''}
-                        </span>
-                      </td>
-                      <td className="num">
-                        {fmt(b.slots)} <span className="lt-dim">{pct(b.slots, m)}</span>
-                      </td>
-                      <td className="num">{fmt(b.flows)}</td>
-                    </tr>
+                      <Swatch lbId={b.lbId} />
+                      <span className="lt-legend-name">{nameOf(b.lbId, b.node)}</span>
+                      <span className="lt-legend-num">{pct(b.slots, m)}</span>
+                      <span className="lt-legend-sub">
+                        {b.inTable
+                          ? `${b.addr ?? ''}${b.slots === 0 ? ' · draining: no new connections' : ''}`
+                          : `left the table; pins expire after ${timeoutS} s idle`}
+                      </span>
+                      <span className="lt-legend-sub lt-legend-num">
+                        {fmt(b.slots)} slots · {fmt(b.flows)} pinned
+                      </span>
+                    </li>
                   ))}
-                </tbody>
-              </table>
-              <p className="lt-hint">Point at a backend to see only its slots.</p>
+                </ul>
+                <p className="lt-hint">Point at a backend to see only its slots.</p>
+              </div>
             </section>
 
-            <section className="lt-section">
-              <h3 className="lt-h">Connection tracking table</h3>
+            <section className="lt-ct" aria-labelledby="lt-ct-h">
+              <h3 id="lt-ct-h" className="lt-h">
+                Connection tracking table
+              </h3>
+              <dl className="lt-stats">
+                <div>
+                  <dt>Connections pinned</dt>
+                  <dd>{fmt(doc.conntrack.active)}</dd>
+                </div>
+                <div>
+                  <dt>A pin expires after</dt>
+                  <dd>{timeoutS} s idle</dd>
+                </div>
+                <div>
+                  <dt>Copying both tables took</dt>
+                  <dd>{(doc.conntrack.scanUs / 1000).toFixed(1)} ms</dd>
+                </div>
+              </dl>
               <p className="lt-prose">
-                {fmt(doc.conntrack.active)} connections pinned. A connection’s first
-                packet reads the Maglev table once and is pinned to that backend; every
-                later packet follows the pin, so a rebuild never moves a live
-                connection. A pin expires after{' '}
-                {fmt(Math.round(doc.ctTimeoutMs / 1000))} s without packets.
+                A connection’s first packet reads the Maglev table once and is pinned to
+                that backend; every later packet follows the pin, so a rebuild never
+                moves a live connection. Highlighted rows are pinned somewhere other
+                than where their slot points now. The counts are exact; the rows are the{' '}
+                {doc.conntrack.rowsPerBackend} most recently active connections per
+                backend. Point at a row to find its slot on the grid.
               </p>
               {flowRows.length > 0 ? (
-                <div className="lt-flows scroll">
+                <div className="lt-flows">
                   <table className="lt-table">
                     <thead>
                       <tr>
                         <th scope="col">Client</th>
+                        <th scope="col">From</th>
                         <th scope="col" className="num">
                           Slot
                         </th>
                         <th scope="col">Pinned to</th>
+                        <th scope="col">Slot’s backend now</th>
                         <th scope="col" className="num">
                           Idle
                         </th>
@@ -436,17 +520,11 @@ export function LiveTables({
               ) : (
                 <p className="ins-hint">No connections yet. Turn the load up.</p>
               )}
-              <p className="lt-hint">
-                The counts are exact. The rows are the {doc.conntrack.rowsPerBackend}{' '}
-                most recently active connections per backend; point at one to find its
-                slot. Copying the table took {(doc.conntrack.scanUs / 1000).toFixed(1)}{' '}
-                ms.
-              </p>
             </section>
           </>
         )}
       </div>
-    </aside>
+    </div>
   );
 }
 
@@ -455,6 +533,16 @@ function nodeOfId(doc: BridgeTables, lbId: number): string | null {
     doc.backends.find((b) => b.lbId === lbId)?.node ??
     doc.conntrack.flows.find((f) => f.lbId === lbId)?.node ??
     null
+  );
+}
+
+function Swatch({ lbId }: { lbId: number }) {
+  return (
+    <span
+      className="lt-swatch"
+      style={{ background: `var(--lt-be-${(lbId % SERIES) + 1})` }}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -485,30 +573,31 @@ function FlowRow({
       onBlur={() => onMark(null)}
       tabIndex={0}
     >
-      <td
-        className="lt-nowrap"
-        title={`${row.src}:${row.sport} → port ${row.dport}, ${row.proto}`}
-      >
-        {clientName}
-        <span className="lt-dim">
-          :{row.sport}
-          {row.proto === 'tcp' ? '' : ` ${row.proto}`}
-        </span>
+      <td className="lt-nowrap">{clientName}</td>
+      <td className="lt-nowrap lt-dim">
+        {row.src}:{row.sport} → :{row.dport}
+        {row.proto === 'tcp' ? '' : ` ${row.proto}`}
       </td>
       <td className="num">{fmt(row.slot)}</td>
       <td>
-        <span
-          className="lt-swatch"
-          style={{ background: `var(--lt-be-${(row.lbId % SERIES) + 1})` }}
-          aria-hidden="true"
-        />
+        <Swatch lbId={row.lbId} />
         {pinnedName}
-        {differs && (
+      </td>
+      <td>
+        {differs ? (
           <span className="lt-differs">
-            {' '}
-            · table now:{' '}
-            {tableOwner === null ? 'no backend' : tableOwnerName(tableOwner)}
+            {tableOwner === null ? (
+              'no backend'
+            ) : (
+              <>
+                <Swatch lbId={tableOwner} />
+                {tableOwnerName(tableOwner)}
+              </>
+            )}{' '}
+            · the pin wins
           </span>
+        ) : (
+          <span className="lt-dim">same</span>
         )}
       </td>
       <td className="num">{(row.idleMs / 1000).toFixed(1)} s</td>

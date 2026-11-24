@@ -68,11 +68,37 @@ export function diffTables(
   };
 }
 
-/** Columns of the grid; the table is drawn row by row, slot 0 top left. */
+/** Columns of the grid before it has been measured; the table is drawn row by row, slot 0 top left. */
 export const GRID_COLS = 256;
 
-export function gridRows(m: number): number {
-  return Math.ceil(m / GRID_COLS);
+export function gridRows(m: number, cols: number = GRID_COLS): number {
+  return Math.ceil(m / cols);
+}
+
+export interface GridShape {
+  cols: number;
+  rows: number;
+  /** Device pixels per slot, a whole number so every slot is the same size. */
+  px: number;
+}
+
+/**
+ * The biggest grid of m slots that fits a box of width x height device pixels:
+ * the largest whole number of device pixels per slot, then as many columns as
+ * fit across, so a wide screen gets a wide grid rather than a square one with
+ * empty space beside it. 256 columns at 1 px if the box has not been measured.
+ */
+export function gridShape(m: number, width: number, height: number): GridShape {
+  if (m <= 0 || width < 1 || height < 1) {
+    return { cols: GRID_COLS, rows: gridRows(Math.max(m, 1)), px: 1 };
+  }
+  for (let px = Math.floor(Math.sqrt((width * height) / m)); px > 1; px--) {
+    const cols = Math.floor(width / px);
+    const rows = Math.ceil(m / cols);
+    if (rows * px <= height) return { cols, rows, px };
+  }
+  const cols = Math.max(1, Math.min(m, Math.floor(width)));
+  return { cols, rows: Math.ceil(m / cols), px: 1 };
 }
 
 export const fmt = (n: number) => n.toLocaleString('en-US');
