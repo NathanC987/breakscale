@@ -288,3 +288,50 @@ export type LiveAction =
     }
   | { action: 'slow'; target: string; factor: number }
   | { action: 'errors'; target: string; rate: number };
+
+/** One conntrack entry, as maglev-lb's inspector copied it (GET /api/v1/lb/tables). */
+export interface BridgeFlowRow {
+  /** The canvas client that owns this source address, if any. */
+  client: string | null;
+  src: string;
+  sport: number;
+  dport: number;
+  proto: 'tcp' | 'udp' | 'other';
+  /** maglev-lb's id for the backend this flow is pinned to. */
+  lbId: number;
+  /** The canvas node that owns that backend slot; null once nothing does. */
+  node: string | null;
+  /** The Maglev slot this flow's 5-tuple hashes to. */
+  slot: number;
+  idleMs: number;
+}
+
+/**
+ * maglev-lb's live Maglev and conntrack tables. The table is base64, one byte
+ * per slot (backend id + 1, 0 for empty), and is left out when the request
+ * named the generation the canvas already holds.
+ */
+export interface BridgeTables {
+  generation: number;
+  /** How old maglev-lb's copy was when the bridge read it. */
+  ageMs: number;
+  m: number;
+  backends: { lbId: number; node: string | null; addr: string; slots: number }[];
+  table?: string;
+  conntrack: {
+    active: number;
+    scanUs: number;
+    rowsPerBackend: number;
+    flows: { lbId: number; node: string | null; n: number }[];
+    rows: BridgeFlowRow[];
+  };
+  source: { where: 'aws' | 'local'; instance?: string | null; type?: string | null };
+  ctTimeoutMs: number;
+  /** Which maglev-lb process this came from (its pid): a restart renumbers generations. */
+  run: number | null;
+}
+
+export type TablesResult =
+  | { kind: 'tables'; doc: BridgeTables }
+  | { kind: 'pending' }
+  | { kind: 'error'; message: string };

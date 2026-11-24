@@ -24,6 +24,7 @@ import { LiveEngine, type AppEngine } from './live/LiveEngine';
 import { LIVE_PRESET } from './live/preset';
 import { connectionProblem } from './live/validate';
 import { LivePanel } from './live/LivePanel';
+import { LiveTables } from './live/LiveTables';
 import { LiveStatus } from './live/LiveStatus';
 import { PRESETS, makeNode } from './sim/presets';
 import { CHALLENGES, challengeById } from './sim/challenges';
@@ -657,6 +658,8 @@ export default function App() {
     applyTheme(themeChoice);
   }, [themeChoice]);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
+  /** Live mode: the sheet showing maglev-lb's real tables. */
+  const [tablesOpen, setTablesOpen] = useState(false);
   const [glossaryFocusId, setGlossaryFocusId] = useState<string | undefined>(undefined);
 
   /** The keyboard shortcuts dialog. Ctrl+/ and the top-bar button. */
@@ -3120,6 +3123,7 @@ export default function App() {
                   view={engine.liveView()}
                   engine={engine}
                   onChange={handleConfigChange}
+                  onOpenTables={() => setTablesOpen(true)}
                 />
               ) : undefined
             }
@@ -3215,6 +3219,14 @@ export default function App() {
       ) : null}
 
       <TooltipLayer />
+      {LIVE && engine instanceof LiveEngine ? (
+        <LiveTables
+          open={tablesOpen}
+          onClose={() => setTablesOpen(false)}
+          engine={engine}
+          labelOf={(id) => topology.nodes.find((n) => n.id === id)?.label}
+        />
+      ) : null}
       <Glossary open={glossaryOpen} onClose={closeGlossary} focusId={glossaryFocusId} />
       <Shortcuts open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
       <Share

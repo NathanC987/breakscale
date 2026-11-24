@@ -9,7 +9,9 @@ import type {
 import {
   type BridgeEvent,
   type BridgeSnapshot,
+  type BridgeTables,
   type LiveAction,
+  type TablesResult,
   isBridgeSnapshot,
 } from './bridge';
 import { type ConnState, type LiveView, emptySnapshot, toSimSnapshot } from './mapping';
@@ -138,6 +140,34 @@ export class LiveEngine implements AppEngine {
   /** Stops every instance on AWS and ends the bridge. Only offered when on AWS. */
   stopCloud(): void {
     void this.post('/cloud/stop', {});
+  }
+
+  /**
+   * maglev-lb's live Maglev and conntrack tables. Pass the table generation
+   * already held, and the (~90 KB) table itself is left out if it is still
+   * current. maglev-lb copies its tables only while someone asks, so the first
+   * answer after a quiet spell is pending.
+   */
+  async fetchTables(knownGeneration: number | null): Promise<TablesResult> {
+    const q = knownGeneration === null ? '' : `?gen=${knownGeneration}`;
+    try {
+      const res = await this.fetchImpl(`${API}/lb/tables${q}`, {
+        headers: this.headers(false),
+      });
+      const body = (await res.json().catch(() => ({}))) as
+        (BridgeTables & { pending?: boolean }) | { error?: string };
+      if (!res.ok) {
+        return {
+          kind: 'error',
+          message:
+            ('error' in body && body.error) || `The bridge answered ${res.status}.`,
+        };
+      }
+      if ('pending' in body && body.pending) return { kind: 'pending' };
+      return { kind: 'tables', doc: body as BridgeTables };
+    } catch {
+      return { kind: 'error', message: 'The bridge is not reachable.' };
+    }
   }
 
   /** Pause and play: the real clients stop and start sending. */

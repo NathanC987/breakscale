@@ -47,11 +47,14 @@ export function LivePanel({
   view,
   engine,
   onChange,
+  onOpenTables,
 }: {
   node: SimNode;
   view: LiveView;
   engine: LiveEngine;
   onChange: (id: string, patch: Partial<NodeConfig>) => void;
+  /** Opens the live Maglev and conntrack tables beside the canvas. */
+  onOpenTables?: () => void;
 }) {
   const [factor, setFactor] = useState(4);
   const [errPct, setErrPct] = useState(30);
@@ -103,6 +106,21 @@ export function LivePanel({
                 ? 'Its EC2 instance is starting. This takes under a minute.'
                 : 'Shutting down.'}
         </p>
+      )}
+
+      {node.kind === 'lb' && onOpenTables && (
+        <Section title="Look inside">
+          <div className="live-actions">
+            <button type="button" className="btn btn-sm" onClick={onOpenTables}>
+              Show its Maglev and conntrack tables
+            </button>
+          </div>
+          <p className="ins-hint">
+            The real tables, copied out of maglev-lb
+            {onAws ? ' on its EC2 instance' : ''} every second. Keep them open while you
+            add, remove or drain a backend.
+          </p>
+        </Section>
       )}
 
       {node.kind === 'client' && (

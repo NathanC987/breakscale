@@ -100,3 +100,266 @@
 .app.is-live-stale .cv-edge-flow {
   animation-play-state: paused;
 }
+
+/* --------------------------------------------------------------------------
+   Inside maglev-lb (LiveTables.tsx): .lt-* only.
+
+   Backend hues are the dataviz reference palette's first five slots, stepped
+   separately for each theme, and follow maglev-lb's backend id so a backend
+   keeps its colour as others come and go. Hue is never the only cue: see the
+   header comment in LiveTables.tsx.
+   -------------------------------------------------------------------------- */
+
+:root {
+  --lt-be-1: #2a78d6;
+  --lt-be-2: #eb6834;
+  --lt-be-3: #1baf7a;
+  --lt-be-4: #eda100;
+  --lt-be-5: #e87ba4;
+  --lt-empty: var(--track);
+  --lt-faded: #ece7e0;
+  --lt-moved: #1e242e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --lt-be-1: #3987e5;
+    --lt-be-2: #d95926;
+    --lt-be-3: #199e70;
+    --lt-be-4: #c98500;
+    --lt-be-5: #d55181;
+    --lt-faded: #2f2e36;
+    --lt-moved: #f0efec;
+  }
+}
+
+:root[data-theme='dark'] {
+  --lt-be-1: #3987e5;
+  --lt-be-2: #d95926;
+  --lt-be-3: #199e70;
+  --lt-be-4: #c98500;
+  --lt-be-5: #d55181;
+  --lt-faded: #2f2e36;
+  --lt-moved: #f0efec;
+}
+
+.lt-sheet {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  /* Above the canvas and panels, below the dialogs (500) and tooltips (400). */
+  z-index: 350;
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100vw);
+  min-height: 0;
+  background: var(--surface);
+  border-left: var(--bw) solid var(--border);
+  box-shadow: var(--shadow-lg);
+  animation: lt-in var(--dur-slow) var(--ease-out);
+}
+
+@keyframes lt-in {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+
+.lt-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: var(--sp-4);
+  border-bottom: var(--bw) solid var(--border);
+}
+
+.lt-title {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: var(--fw-med);
+  color: var(--text);
+}
+
+.lt-source {
+  margin: var(--sp-1) 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+.lt-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 var(--sp-4) var(--sp-4);
+}
+
+.lt-section {
+  padding-top: var(--sp-4);
+}
+
+.lt-h {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-label);
+  font-weight: var(--fw-med);
+  letter-spacing: var(--tr-label);
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.lt-prose,
+.lt-hint,
+.lt-readout {
+  margin: 0 0 var(--sp-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text-dim);
+}
+
+.lt-hint {
+  margin-top: var(--sp-2);
+  color: var(--text-faint);
+}
+
+.lt-readout {
+  margin-top: var(--sp-2);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  min-height: 1.5em;
+}
+
+.lt-alert {
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--warn-soft);
+  color: var(--warn);
+  font-size: var(--fs-sm);
+}
+
+.lt-grid-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 512px;
+}
+
+.lt-grid {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  border: var(--bw) solid var(--border);
+  border-radius: var(--r-sm);
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.lt-mark {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border: 2px solid var(--text);
+  border-radius: var(--r-pill);
+  box-shadow: 0 0 0 2px var(--surface);
+  pointer-events: none;
+}
+
+.lt-change {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+  margin-top: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-sm);
+  color: var(--text);
+}
+
+.lt-change p {
+  margin: 0;
+  flex: 1 1 260px;
+}
+
+.lt-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.lt-table th {
+  position: sticky;
+  top: 0;
+  padding: var(--sp-1) var(--sp-2);
+  background: var(--surface-3);
+  font-weight: var(--fw-med);
+  text-align: left;
+  color: var(--text-dim);
+}
+
+.lt-table td {
+  padding: var(--sp-1) var(--sp-2);
+  border-bottom: var(--bw) solid var(--border);
+  vertical-align: top;
+}
+
+.lt-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.lt-table tbody tr {
+  cursor: default;
+}
+
+.lt-table tbody tr:hover,
+.lt-table tbody tr:focus-visible,
+.lt-table tbody tr.is-focus {
+  background: var(--surface-2);
+  outline: none;
+}
+
+.lt-table tr.is-differs td {
+  background: var(--warn-soft);
+}
+
+.lt-differs {
+  color: var(--warn);
+}
+
+.lt-dim {
+  color: var(--text-faint);
+}
+
+.lt-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: var(--sp-2);
+  border-radius: var(--r-mark);
+  vertical-align: baseline;
+}
+
+.lt-flows {
+  max-height: 320px;
+  overflow-y: auto;
+  border: var(--bw) solid var(--border);
+  border-radius: var(--r-sm);
+}
+
+.lt-nowrap {
+  white-space: nowrap;
+}
+
+.lt-key {
+  display: block;
+  margin-top: var(--sp-1);
+  color: var(--text-dim);
+}
